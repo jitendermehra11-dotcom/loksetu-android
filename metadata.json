@@ -1,0 +1,6 @@
+{
+  "name": "LokSetu",
+  "description": "Connecting local farmers, skilled workers, mobility drivers, store deliveries & home service professionals (beauty, healthcare, domestic) with 100% upfront escrow & travel lock, discreet women visit safety protocols, and customer dispute protection.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
