@@ -1,35 +1,33 @@
-package com.example
+package com.loksetu.app
 
+import android.app.AlertDialog
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import android.view.KeyEvent
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
-import com.example.ui.screens.HomeScreen
-import com.example.ui.theme.LokSetuTheme
-import com.example.ui.viewmodel.LokSetuViewModel
+import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
 
-  private val vm: LokSetuViewModel by viewModels()
+        // 1. एड और इंश्योरेंस कार्ड क्लिक विवरण (Dialog Popup)
+        val cardInsurance = findViewById<View>(R.id.cardInsurance)
+        cardInsurance?.setOnClickListener {
+            AlertDialog.Builder(this)
+                .setTitle("LokSetu सुरक्षा व विज्ञापन विवरण")
+                .setMessage("• एड व्यूज से हुई कमाई: ₹12.50\n• माइक्रो-इंश्योरेंस कवर: ₹50,000\n• एक्टिव प्लान: डेली वर्कर सुरक्षा सेतु")
+                .setPositiveButton("ठीक है") { dialog, _ -> dialog.dismiss() }
+                .show()
+        }
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    enableEdgeToEdge()
-    setContent {
-      LokSetuTheme {
-        HomeScreen(viewModel = vm)
-      }
+        // 2. असली मर्चेंट UPI पेमेंट लिंक (PhonePe / GPay / Paytm)
+        val btnMerchantPay = findViewById<View>(R.id.btnMerchantPay)
+        btnMerchantPay?.setOnClickListener {
+            val upiUri = Uri.parse("upi://pay?pa=yourmerchant@upi&pn=LokSetu&mc=0000&mode=02&purpose=00")
+            val intent = Intent(Intent.ACTION_VIEW, upiUri)
+            startActivity(Intent.createChooser(intent, "पेमेंट ऐप चुनें"))
+        }
     }
-  }
-
-  override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-    if (vm.sosManager.onHardwareKeyEvent(event.keyCode, event)) {
-      vm.openSosDialog()
-      return true
-    }
-    return super.dispatchKeyEvent(event)
-  }
 }
-
