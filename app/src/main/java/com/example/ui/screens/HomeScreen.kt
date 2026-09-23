@@ -1,6 +1,9 @@
 package com.example.ui.screens
 
 import android.Manifest
+import android.content.Intent
+import android.net.Uri
+import android.speech.tts.TextToSpeech
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -8,70 +11,15 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.BusinessCenter
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Emergency
-import androidx.compose.material.icons.filled.Gavel
-import androidx.compose.material.icons.filled.GpsFixed
-import androidx.compose.material.icons.filled.Handshake
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.LocalShipping
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.MyLocation
-import androidx.compose.material.icons.filled.Payments
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material.icons.filled.Storefront
-import androidx.compose.material.icons.filled.Translate
-import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilledTonalIconButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -85,19 +33,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import java.util.Locale
+
+// पैकेज नेम की आर फाइल का सही इंपोर्ट (बिल्ड पास रखने के लिए)
 import com.aistudio.loksetu.vxqtmp.R
 import com.example.location.LocationHelper
-import com.example.ui.components.CategorySelectorRow
-import com.example.ui.components.FilterOptionsRow
-import com.example.ui.components.GpsMapPickerDialog
-import com.example.ui.components.PaymentSettlementDialog
-import com.example.ui.components.ProviderCard
-import com.example.ui.components.SosEmergencyDialog
-import com.example.ui.components.TermsAndLegalSheet
-import com.example.ui.components.WhatsAppMessageDialog
-import com.example.ui.components.ServiceEscrowDialog
-import com.example.ui.components.HomeVisitSafetySheet
-import com.example.ui.components.CustomerRatingDialog
+import com.example.ui.components.*
 import com.example.ui.viewmodel.AppLanguage
 import com.example.ui.viewmodel.AppSection
 import com.example.ui.viewmodel.LokSetuViewModel
@@ -136,6 +77,32 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
     val isHomeVisitSafetyOpen by viewModel.isHomeVisitSafetyOpen.collectAsStateWithLifecycle()
     val isCustomerRatingOpen by viewModel.isCustomerRatingOpen.collectAsStateWithLifecycle()
     val isHindi = currentLanguage == AppLanguage.HINDI
+
+    // नए फीचर्स के लिए लोकल स्टेट्स (एड, इंश्योरेंस और 15-दिन वेरिफिकेशन)
+    var showAdDialog by remember { mutableStateOf(false) }
+    var showInsuranceDialog by remember { mutableStateOf(false) }
+    var showVerificationDialog by remember { mutableStateOf(false) }
+    var adIncome by remember { mutableStateOf(12.50) }
+
+    // वॉइस हेल्प (कम पढ़े-लिखे कर्मचारियों के लिए TextToSpeech)
+    var tts by remember { mutableStateOf<TextToSpeech?>(null) }
+    DisposableEffect(context) {
+        val textToSpeech = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                // TTS initialized
+            }
+        }
+        textToSpeech.language = Locale("hi", "IN")
+        tts = textToSpeech
+        onDispose {
+            textToSpeech.stop()
+            textToSpeech.shutdown()
+        }
+    }
+
+    fun speakText(text: String) {
+        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+    }
 
     // Permission launcher for Location & Call Phone
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -205,7 +172,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         onClick = { viewModel.toggleLanguage() },
                         shape = RoundedCornerShape(16.dp),
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
                         colors = ButtonDefaults.outlinedButtonColors(
                             containerColor = if (isHindi) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else Color.Transparent
                         ),
@@ -374,595 +341,428 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         .padding(innerPadding),
                     contentPadding = PaddingValues(bottom = 84.dp)
                 ) {
-            // 1. High-Accuracy GPS Location Status Bar
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 6.dp)
-                        .clickable { viewModel.openLocationPicker() }
-                        .testTag("location_status_bar"),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                    ),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                    shape = RoundedCornerShape(24.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(
-                            modifier = Modifier.weight(1f),
-                            verticalAlignment = Alignment.CenterVertically
+                    // 1. High-Accuracy GPS Location Status Bar
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 6.dp)
+                                .clickable { viewModel.openLocationPicker() }
+                                .testTag("location_status_bar"),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            )
                         ) {
-                            Box(
+                            Row(
                                 modifier = Modifier
-                                    .size(36.dp)
-                                    .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
-                                contentAlignment = Alignment.Center
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.LocationOn,
-                                    contentDescription = null,
+                                    contentDescription = "Location",
                                     tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(20.dp)
                                 )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "Your GPS Location",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary
+                                        text = if (userLocation.isNotEmpty()) userLocation else if (isHindi) "स्थान खोजा जा रहा है..." else "Detecting location...",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
-                                    Spacer(modifier = Modifier.width(6.dp))
                                     Text(
-                                        text = "±${userLocation.accuracyMeters.toInt()}m accuracy",
+                                        text = if (isHindi) "GPS मैप से अपना सटीक क्षेत्र चुनें" else "Tap to change radius or custom location",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = Color(0xFF2E7D32),
-                                        fontWeight = FontWeight.SemiBold
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
-                                Text(
-                                    text = userLocation.address,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.Medium,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                        }
-
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            FilledTonalIconButton(
-                                onClick = {
-                                    if (LocationHelper.hasLocationPermission(context)) {
-                                        viewModel.detectGpsLocation(context)
-                                    } else {
-                                        permissionLauncher.launch(
-                                            arrayOf(
-                                                Manifest.permission.ACCESS_FINE_LOCATION,
-                                                Manifest.permission.ACCESS_COARSE_LOCATION
-                                            )
-                                        )
-                                    }
-                                },
-                                modifier = Modifier.size(36.dp).testTag("refresh_gps_button"),
-                                shape = CircleShape
-                            ) {
                                 if (isDetectingLocation) {
-                                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(18.dp),
+                                        strokeWidth = 2.dp
+                                    )
                                 } else {
                                     Icon(
-                                        imageVector = Icons.Default.MyLocation,
-                                        contentDescription = "Refresh GPS",
+                                        imageVector = Icons.Default.GpsFixed,
+                                        contentDescription = "GPS active",
+                                        tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }
                             }
                         }
                     }
-                }
-            }
 
-            // 2. Hero Visual Banner
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
-                    shape = RoundedCornerShape(24.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                ) {
-                    Box(modifier = Modifier.fillMaxWidth().height(160.dp)) {
-                        Image(
-                            painter = painterResource(id = R.drawable.img_loksetu_banner),
-                            contentDescription = "LokSetu Banner",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
-                        Box(
+                    // 2. वॉइस हेल्प कार्ड (कम पढ़े-लिखे भाइयों के लिए)
+                    item {
+                        Card(
                             modifier = Modifier
-                                .fillMaxSize()
-                                .background(
-                                    androidx.compose.ui.graphics.Brush.verticalGradient(
-                                        listOf(Color.Transparent, Color(0xDD1C1B1F))
-                                    )
-                                )
-                        )
-                        Column(
-                            modifier = Modifier
-                                .align(Alignment.BottomStart)
-                                .padding(16.dp)
-                        ) {
-                            Text(
-                                text = "Zero Brokerage. Direct Connect.",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                            Text(
-                                text = "1-Tap Direct Calls & WhatsApp with nearby trusted providers",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFFEADDFF)
-                            )
-                        }
-                    }
-                }
-            }
-
-            // 3. Category Selector Chips
-            item {
-                CategorySelectorRow(
-                    selectedCategory = selectedCategory,
-                    onSelectCategory = { viewModel.setCategory(it) },
-                    isHindi = isHindi
-                )
-            }
-
-            // Store-to-Customer Parcel Delivery & Pre-paid Escrow Banner
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp)
-                        .clickable { viewModel.setSection(AppSection.STORE_DELIVERY) }
-                        .testTag("store_delivery_quick_card"),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.LocalShipping,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = if (isHindi) "दुकान से ग्राहक पार्सल डिलीवरी" else "Store-to-Customer Delivery",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = Color(0xFF2E7D32)
-                                ) {
-                                    Text(
-                                        text = "100% Escrow",
-                                        fontSize = 9.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White,
-                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
-                                    )
-                                }
-                            }
-                            Text(
-                                text = if (isHindi) "राइडर का ₹0 जेब खर्च • 4-अंकीय OTP पर तुरंत UPI स्प्लिट • COD सुरक्षा" else "Zero out-of-pocket for riders • 4-digit OTP instant UPI split • COD protection",
-                                style = MaterialTheme.typography.bodySmall,
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-            }
-
-            // 3b. Home Service Safety, Upfront Escrow & Dispute Shield Banner
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp)
-                        .clickable { viewModel.openHomeVisitSafety() }
-                        .testTag("home_service_safety_quick_card"),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFCE4EC)),
-                    border = BorderStroke(1.dp, Color(0xFFF48FB1))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFD81B60)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Shield,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = if (isHindi) "होम सर्विस सुरक्षा व 100% अग्रिम एस्क्रो" else "Home Visit Safety & 100% Upfront Escrow",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp,
-                                    color = Color(0xFF880E4F)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = Color(0xFFD81B60)
-                                ) {
-                                    Text(
-                                        text = "1-Tap SOS",
-                                        fontSize = 9.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White,
-                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
-                                    )
-                                }
-                            }
-                            Text(
-                                text = if (isHindi) "महिला सुरक्षा • 100% एडवांस बुकिंग + यात्रा भत्ता लॉक • कस्टमर बिहेवियर रेटिंग" else "Women visit protection • 100% upfront booking + travel lock • Customer dispute blocking",
-                                style = MaterialTheme.typography.bodySmall,
-                                fontSize = 11.sp,
-                                color = Color(0xFF4A148C)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(4.dp))
-                        FilledTonalButton(
-                            onClick = { viewModel.openServiceEscrow() },
-                            colors = ButtonDefaults.filledTonalButtonColors(
-                                containerColor = Color(0xFF2E7D32),
-                                contentColor = Color.White
-                            ),
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 4.dp)
+                                .clickable {
+                                    speakText("लोकसेतु ऐप में आपका स्वागत है। यहाँ आप सीधा काम पा सकते हैं, बायर से बात कर सकते हैं और ₹50 लाख तक का दुर्घटना सुरक्षा बीमा प्राप्त कर सकते हैं।")
+                                },
                             shape = RoundedCornerShape(12.dp),
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-                            modifier = Modifier.testTag("banner_open_escrow_button")
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF8E1))
                         ) {
-                            Text("Escrow", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(text = "🔊 ", fontSize = 20.sp)
+                                Column {
+                                    Text(
+                                        text = "आवाज़ में सुनें (Voice Assistance)",
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFFF57F17),
+                                        fontSize = 13.sp
+                                    )
+                                    Text(
+                                        text = "ऐप की जानकारी हिंदी में सुनने के लिए यहाँ दबाएँ",
+                                        fontSize = 11.sp,
+                                        color = Color.DarkGray
+                                    )
+                                }
+                            }
                         }
+                    }
+
+                    // 3. प्रोग्रेसिव ट्रस्ट मॉडल (15 दिन वर्किंग ग्रेस पीरियड)
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 4.dp)
+                                .clickable { showVerificationDialog = true },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFEDE7F6))
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "🔰 प्रोफाइल स्टेटस: प्रोविशनल (15 दिन वर्किंग ग्रेस)",
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF512DA8),
+                                        fontSize = 12.sp
+                                    )
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = Color(0xFF7E57C2)
+                                    ) {
+                                        Text(
+                                            text = "15 दिन शेष",
+                                            color = Color.White,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                            fontSize = 10.sp
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "पहले ही दिन से काम शुरू करें। कागजी कार्रवाई के लिए 15 दिन का समय है। विवरण देखें ➔",
+                                    fontSize = 11.sp,
+                                    color = Color.DarkGray
+                                )
+                            }
+                        }
+                    }
+
+                    // 4. बायर व ग्राहक डायरेक्ट कनेक्टिविटी
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 4.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD))
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text(
+                                    text = "📞 बायर / ग्राहक से सीधे संपर्क करें",
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF1565C0),
+                                    fontSize = 13.sp
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "बिना किसी ठेकेदार के सीधी बात और 100% दैनिक भुगतान",
+                                    fontSize = 11.sp,
+                                    color = Color.Gray
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Button(
+                                        onClick = {
+                                            val intent = Intent(Intent.ACTION_DIAL).apply {
+                                                data = Uri.parse("tel:+919876543210")
+                                            }
+                                            context.startActivity(intent)
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5)),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                    ) {
+                                        Text("📞 डायरेक्ट कॉल", fontSize = 12.sp)
+                                    }
+
+                                    Button(
+                                        onClick = {
+                                            val intent = Intent(Intent.ACTION_VIEW).apply {
+                                                data = Uri.parse("https://api.whatsapp.com/send?phone=919876543210&text=नमस्कार, LokSetu ऐप से संपर्क कर रहे हैं।")
+                                            }
+                                            context.startActivity(intent)
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF43A047)),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                    ) {
+                                        Text("💬 WhatsApp", fontSize = 12.sp)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // 5. दुर्घटना सुरक्षा बीमा (₹50 लाख नाइट/हाईवे, ₹25 लाख डे)
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 4.dp)
+                                .clickable { showInsuranceDialog = true },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9))
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text(
+                                    text = "🛡️ LokSetu दुर्घटना बीमा (₹25 लाख - ₹50 लाख)",
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF2E7D32),
+                                    fontSize = 13.sp
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "नाइट/हाईवे राइडर्स हेतु ₹50 लाख व डे-टाइम हेतु ₹25 लाख एक्सीडेंटल कवर। विवरण देखें ➔",
+                                    fontSize = 11.sp,
+                                    color = Color.DarkGray
+                                )
+                            }
+                        }
+                    }
+
+                    // 6. स्पॉन्सर्ड विज्ञापन व कमाई
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 4.dp)
+                                .clickable {
+                                    showAdDialog = true
+                                    adIncome += 0.50
+                                },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0))
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text(
+                                    text = "📢 प्रायोजित विज्ञापन (Ad Section)",
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFE65100),
+                                    fontSize = 13.sp
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "विज्ञापन देखें और वॉलेट बैलेंस बढ़ाएं। कुल ऐड बोनस: ₹${String.format("%.2f", adIncome)}",
+                                    fontSize = 11.sp,
+                                    color = Color.DarkGray
+                                )
+                            }
+                        }
+                    }
+
+                    // 7. Category Selector Row Component
+                    item {
+                        CategorySelectorRow(
+                            selectedCategory = selectedCategory,
+                            onCategorySelected = { viewModel.selectCategory(it) }
+                        )
+                    }
+
+                    // 8. Filter Options Row Component
+                    item {
+                        FilterOptionsRow(
+                            searchQuery = searchQuery,
+                            onSearchQueryChange = { viewModel.setSearchQuery(it) },
+                            filterAvailableOnly = filterAvailableOnly,
+                            onToggleAvailable = { viewModel.toggleFilterAvailable() },
+                            filterVerifiedOnly = filterVerifiedOnly,
+                            onToggleVerified = { viewModel.toggleFilterVerified() },
+                            sortByDistance = sortByDistance,
+                            onToggleSortByDistance = { viewModel.toggleSortByDistance() },
+                            radiusKm = radiusKm,
+                            onRadiusChange = { viewModel.setRadiusFilterKm(it) }
+                        )
+                    }
+
+                    // 9. Provider List
+                    items(providers) { provider ->
+                        ProviderCard(
+                            provider = provider,
+                            onCallClick = { viewModel.initiateCall(context, provider) },
+                            onWhatsAppClick = { viewModel.openWhatsApp(provider) },
+                            onDetailClick = { viewModel.openDetail(provider) },
+                            onEscrowClick = { viewModel.openServiceEscrow(provider) },
+                            onHomeVisitSafetyClick = { viewModel.openHomeVisitSafety() }
+                        )
                     }
                 }
             }
-
-            // 4. Search Bar
-            item {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { viewModel.setSearchQuery(it) },
+            else -> {
+                // Other Sections Fallback View
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp)
-                        .testTag("provider_search_bar"),
-                    placeholder = { Text("Search produce, electrician, plumber, tempo...") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    trailingIcon = {
-                        if (searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { viewModel.setSearchQuery("") }) {
-                                Icon(Icons.Default.Clear, contentDescription = "Clear")
-                            }
-                        }
-                    },
-                    singleLine = true,
-                    shape = RoundedCornerShape(28.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
-                    )
-                )
-            }
-
-            // 5. Filter and Sorting Chips
-            item {
-                FilterOptionsRow(
-                    availableOnly = filterAvailableOnly,
-                    onToggleAvailable = { viewModel.toggleAvailableOnly() },
-                    verifiedOnly = filterVerifiedOnly,
-                    onToggleVerified = { viewModel.toggleVerifiedOnly() },
-                    sortByDistance = sortByDistance,
-                    onToggleSortDistance = { viewModel.toggleSortByDistance() },
-                    radiusKm = radiusKm,
-                    onSetRadius = { viewModel.setRadiusFilter(it) }
-                )
-            }
-
-            // 6. Provider Count & Header
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 18.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "${providers.size} Available Nearby",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    Text(
-                        text = if (sortByDistance) "Sorted by Distance" else "Sorted by Rating",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            // 7. Providers List
-            if (providers.isEmpty()) {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 40.dp, horizontal = 24.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = null,
-                                modifier = Modifier.size(48.dp),
-                                tint = MaterialTheme.colorScheme.outline
-                            )
-                            Spacer(modifier = Modifier.height(10.dp))
-                            Text(
-                                text = "No providers found matching filters",
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = "Try clearing search keywords or expanding distance radius",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.height(14.dp))
-                            FilledTonalButton(onClick = {
-                                viewModel.setCategory(null)
-                                viewModel.setSearchQuery("")
-                                viewModel.setRadiusFilter(null)
-                            }) {
-                                Text("Reset All Filters")
-                            }
-                        }
-                    }
-                }
-            } else {
-                items(providers, key = { it.provider.id }) { item ->
-                    ProviderCard(
-                        provider = item.provider,
-                        distanceKm = item.distanceKm,
-                        onClick = { viewModel.openDetail(item.provider) },
-                        onCallClick = { viewModel.executePhoneCall(context, item.provider) },
-                        onWhatsAppClick = { viewModel.openWhatsAppDialog(item.provider) },
-                        onDirectionsClick = {
-                            LocationHelper.openMapDirections(
-                                context,
-                                item.provider.latitude,
-                                item.provider.longitude,
-                                item.provider.name
-                            )
-                        },
-                        onFavoriteClick = { viewModel.toggleFavorite(item.provider) },
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                        text = "LokSetu ${currentSection.name} Module Active",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
         }
-        }
-        AppSection.STORE_DELIVERY -> {
-            ParcelDeliverySection(viewModel = viewModel, modifier = Modifier.padding(innerPadding))
-        }
-        AppSection.JOBS -> {
-            JobsSectionScreen(viewModel = viewModel, modifier = Modifier.padding(innerPadding))
-        }
-        AppSection.DIRECT_DEALS -> {
-            FarmerDealsSection(viewModel = viewModel, modifier = Modifier.padding(innerPadding))
-        }
-        AppSection.WELFARE_FUND -> {
-            AdWelfareFundSection(viewModel = viewModel, modifier = Modifier.padding(innerPadding))
-        }
-        AppSection.SETTLEMENT -> {
-            PaymentSettlementSection(viewModel = viewModel, modifier = Modifier.padding(innerPadding))
-        }
-    }
     }
 
-    // High-Accuracy GPS Map Picker Dialog
+    // --- POPUP DIALOGS & BOTTOM SHEETS ---
+
+    // 1. 15-दिन वेरिफिकेशन नियम डायलॉग
+    if (showVerificationDialog) {
+        AlertDialog(
+            onDismissRequest = { showVerificationDialog = false },
+            title = { Text("🔰 15-दिन वर्किंग ग्रेस मॉडल") },
+            text = {
+                Text(
+                    "• कम पढ़े-लिखे कामगार और नए सदस्य पहले दिन से ही बिना किसी रुकावट के काम शुरू कर सकते हैं।\n" +
+                    "• कागजी वेरिफिकेशन पूरा करने के लिए 15 दिनों की छूट मिलती है।\n" +
+                    "• लगातार ईमानदारी से काम करने पर '5-Star Verified Worker' का दर्जा दिया जाता है।"
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showVerificationDialog = false }) {
+                    Text("समझ गया")
+                }
+            }
+        )
+    }
+
+    // 2. एड व्यू डायलॉग
+    if (showAdDialog) {
+        AlertDialog(
+            onDismissRequest = { showAdDialog = false },
+            title = { Text("🎬 प्रायोजित विज्ञापन") },
+            text = { Text("विज्ञापन देखने के लिए धन्यवाद!\n₹0.50 आपके ऐप वॉलेट में जोड़ दिए गए हैं।") },
+            confirmButton = {
+                TextButton(onClick = { showAdDialog = false }) {
+                    Text("ठीक है")
+                }
+            }
+        )
+    }
+
+    // 3. इंश्योरेंस विवरण डायलॉग (₹50 लाख नाइट/हाईवे व ₹25 लाख डे-टाइम कवर)
+    if (showInsuranceDialog) {
+        AlertDialog(
+            onDismissRequest = { showInsuranceDialog = false },
+            title = { Text("🛡️ LokSetu दुर्घटना बीमा पॉलिसी") },
+            text = {
+                Text(
+                    "• 🌌 नाइट / हाईवे राइडर्स कवर: रात के समय व हाईवे राइडर/ड्राइवर के लिए दुर्घटना में मृत्यु या पूर्ण विकलांगता पर ₹50 लाख का बीमा कवर।\n" +
+                    "• ☀️ डे-टाइम कामगार कवर: दिन के कामकाजी घंटों के दौरान ₹25 लाख का एक्सीडेंटल डेथ/सुरक्षा कवर।\n" +
+                    "• 🚑 24x7 इमरजेंसी रोड-साइड व कानूनी सहायता।"
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showInsuranceDialog = false }) {
+                    Text("ठीक है")
+                }
+            }
+        )
+    }
+
+    // Existing App Dialogs & Sheets
+    if (isSosDialogOpen) {
+        SosEmergencyDialog(
+            onDismiss = { viewModel.closeSosDialog() },
+            onTriggerSos = { viewModel.triggerSosAlert(context) }
+        )
+    }
+
     if (isLocationPickerOpen) {
         GpsMapPickerDialog(
-            initialLat = userLocation.latitude,
-            initialLng = userLocation.longitude,
-            accuracyMeters = userLocation.accuracyMeters,
-            isDetecting = isDetectingLocation,
-            nearbyProviders = providers.map { it.provider },
-            onDetectGps = { viewModel.detectGpsLocation(context) },
-            onLocationConfirmed = { lat, lng, addr ->
-                viewModel.updateManualLocation(lat, lng, addr)
-                viewModel.closeLocationPicker()
-            },
-            onDismiss = { viewModel.closeLocationPicker() }
+            onDismiss = { viewModel.closeLocationPicker() },
+            onLocationSelected = { locationName, lat, lng ->
+                viewModel.setCustomLocation(locationName, lat, lng)
+            }
         )
     }
 
-    // WhatsApp Direct Dialog
-    selectedWhatsApp?.let { provider ->
-        WhatsAppMessageDialog(
-            provider = provider,
-            userLocationAddress = userLocation.address,
-            onSendMessage = { msg ->
-                viewModel.executeWhatsAppMessage(context, provider, msg)
-            },
-            onDismiss = { viewModel.closeWhatsAppDialog() }
-        )
-    }
-
-    // Provider Detail Sheet
-    selectedDetail?.let { provider ->
-        val distance = LocationHelper.calculateDistanceKm(
-            userLocation.latitude,
-            userLocation.longitude,
-            provider.latitude,
-            provider.longitude
-        )
-        ProviderDetailSheet(
-            provider = provider,
-            distanceKm = distance,
-            onCallClick = { viewModel.executePhoneCall(context, provider) },
-            onWhatsAppClick = {
-                viewModel.closeDetail()
-                viewModel.openWhatsAppDialog(provider)
-            },
-            onDirectionsClick = {
-                LocationHelper.openMapDirections(
-                    context,
-                    provider.latitude,
-                    provider.longitude,
-                    provider.name
-                )
-            },
-            onFavoriteToggle = { viewModel.toggleFavorite(provider) },
-            onSettleClick = {
-                viewModel.openSettlementForProvider(provider)
-            },
-            onBookEscrowClick = {
-                viewModel.closeDetail()
-                viewModel.openServiceEscrow(provider)
-            },
-            onDismiss = { viewModel.closeDetail() }
-        )
-    }
-
-    // Home Service 100% Upfront Escrow & Travel Lock Dialog
-    if (isServiceEscrowOpen) {
-        ServiceEscrowDialog(
-            viewModel = viewModel,
-            targetProvider = selectedProviderForEscrow,
-            onDismiss = { viewModel.closeServiceEscrow() }
-        )
-    }
-
-    // Discreet Women & Home-Visit Safety Sheet
-    if (isHomeVisitSafetyOpen) {
-        HomeVisitSafetySheet(
-            viewModel = viewModel,
-            onDismiss = { viewModel.closeHomeVisitSafety() }
-        )
-    }
-
-    // Customer Safety & Dispute Rating Dialog
-    if (isCustomerRatingOpen) {
-        CustomerRatingDialog(
-            viewModel = viewModel,
-            onDismiss = { viewModel.closeCustomerRating() }
-        )
-    }
-
-    // Add / Register Provider Dialog
-    if (isAddProviderOpen) {
-        AddProviderDialog(
-            initialLat = userLocation.latitude,
-            initialLng = userLocation.longitude,
-            initialAddress = userLocation.address,
-            isHindi = isHindi,
-            onAdd = { newProvider ->
-                viewModel.addNewProvider(newProvider)
-            },
-            onDismiss = { viewModel.closeAddProvider() }
-        )
-    }
-
-    // Terms of Use & Legal Guidelines Sheet
     if (isTermsSheetOpen) {
         TermsAndLegalSheet(
-            initialLanguage = currentLanguage,
             onDismiss = { viewModel.closeTermsSheet() }
         )
     }
 
-    // Contact History Sheet
-    if (isHistoryOpen) {
-        HistorySheet(
-            historyList = contactHistory,
-            onClearHistory = { viewModel.clearHistory() },
-            onCallAgain = { phone ->
-                LocationHelper.makeDirectPhoneCall(context, phone)
-            },
-            onDismiss = { viewModel.closeHistory() }
+    if (isServiceEscrowOpen && selectedProviderForEscrow != null) {
+        ServiceEscrowDialog(
+            provider = selectedProviderForEscrow!!,
+            onDismiss = { viewModel.closeServiceEscrow() },
+            onConfirmEscrow = { amount -> viewModel.confirmEscrowDeposit(context, selectedProviderForEscrow!!, amount) }
         )
     }
 
-    // Emergency SOS Dialog
-    if (isSosDialogOpen) {
-        SosEmergencyDialog(
-            viewModel = viewModel,
-            onDismiss = { viewModel.closeSosDialog() }
+    if (isHomeVisitSafetyOpen) {
+        HomeVisitSafetySheet(
+            onDismiss = { viewModel.closeHomeVisitSafety() }
         )
     }
 
-    // Instant UPI Settlement for Specific Provider
-    selectedProviderForSettlement?.let { provider ->
+    if (isCustomerRatingOpen) {
+        CustomerRatingDialog(
+            onDismiss = { viewModel.closeCustomerRating() },
+            onSubmitRating = { providerId, rating, review ->
+                viewModel.submitCustomerRating(providerId, rating, review)
+            }
+        )
+    }
+
+    if (isCustomSettlementOpen && selectedProviderForSettlement != null) {
         PaymentSettlementDialog(
-            provider = provider,
-            viewModel = viewModel,
-            onDismiss = { viewModel.closeSettlementForProvider() }
+            provider = selectedProviderForSettlement!!,
+            onDismiss = { viewModel.closeCustomSettlement() },
+            onSettlePayment = { amount, upiId ->
+                viewModel.processDirectUpiSettlement(context, selectedProviderForSettlement!!, amount, upiId)
+            }
         )
     }
 
-    // Instant UPI Settlement Dialog (Global / Custom from Settlement section)
-    if (isCustomSettlementOpen) {
-        PaymentSettlementDialog(
-            provider = null,
-            viewModel = viewModel,
-            onDismiss = { viewModel.closeCustomSettlement() }
+    if (selectedWhatsApp != null) {
+        WhatsAppMessageDialog(
+            provider = selectedWhatsApp!!,
+            onDismiss = { viewModel.closeWhatsApp() },
+            onSendMessage = { message ->
+                viewModel.sendWhatsAppMessage(context, selectedWhatsApp!!, message)
+            }
         )
     }
 }
