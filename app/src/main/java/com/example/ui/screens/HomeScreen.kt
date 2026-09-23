@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.util.Locale
 
-// पैकेज नेम की आर फाइल का सही इंपोर्ट (बिल्ड पास रखने के लिए)
+// पैकेज नेम R फाइल का सही इंपोर्ट
 import com.aistudio.loksetu.vxqtmp.R
 import com.example.location.LocationHelper
 import com.example.ui.components.*
@@ -78,7 +78,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
     val isCustomerRatingOpen by viewModel.isCustomerRatingOpen.collectAsStateWithLifecycle()
     val isHindi = currentLanguage == AppLanguage.HINDI
 
-    // नए फीचर्स के लिए लोकल स्टेट्स (एड, इंश्योरेंस और 15-दिन वेरिफिकेशन)
+    // नए फीचर्स के लोकल स्टेट्स
     var showAdDialog by remember { mutableStateOf(false) }
     var showInsuranceDialog by remember { mutableStateOf(false) }
     var showVerificationDialog by remember { mutableStateOf(false) }
@@ -167,7 +167,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                     }
                 },
                 actions = {
-                    // Multi-Language Switcher (Hindi / English Toggle Button)
+                    // Multi-Language Switcher
                     OutlinedButton(
                         onClick = { viewModel.toggleLanguage() },
                         shape = RoundedCornerShape(16.dp),
@@ -195,7 +195,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
 
                     Spacer(modifier = Modifier.width(2.dp))
 
-                    // Terms of Use & Legal Guidelines Button
+                    // Terms & Legal Guidelines Button
                     IconButton(
                         onClick = { viewModel.openTermsSheet() },
                         modifier = Modifier.testTag("top_open_terms_button")
@@ -207,7 +207,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         )
                     }
 
-                    // Customer Rating & Dispute Protection Button
+                    // Customer Rating & Protection Button
                     IconButton(
                         onClick = { viewModel.openCustomerRating() },
                         modifier = Modifier.testTag("top_open_rating_button")
@@ -219,7 +219,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         )
                     }
 
-                    // Emergency SOS 1-Tap Trigger Button
+                    // Emergency SOS Button
                     FilledTonalButton(
                         onClick = { viewModel.openSosDialog() },
                         colors = ButtonDefaults.filledTonalButtonColors(
@@ -247,7 +247,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
 
                     Spacer(modifier = Modifier.width(4.dp))
 
-                    // Contact History action
+                    // Contact History
                     IconButton(
                         onClick = { viewModel.openHistory() },
                         modifier = Modifier.testTag("open_history_button")
@@ -589,7 +589,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         }
                     }
 
-                    // 7. Category Selector Row Component
+                    // 7. Category Selector Row
                     item {
                         CategorySelectorRow(
                             selectedCategory = selectedCategory,
@@ -597,7 +597,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         )
                     }
 
-                    // 8. Filter Options Row Component
+                    // 8. Filter Options Row
                     item {
                         FilterOptionsRow(
                             searchQuery = searchQuery,
@@ -627,7 +627,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                 }
             }
             else -> {
-                // Other Sections Fallback View
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -700,7 +699,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
         )
     }
 
-    // Existing App Dialogs & Sheets
+    // Existing App Dialogs (Corrected Signatures)
     if (isSosDialogOpen) {
         SosEmergencyDialog(
             onDismiss = { viewModel.closeSosDialog() },
@@ -739,30 +738,25 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
 
     if (isCustomerRatingOpen) {
         CustomerRatingDialog(
-            onDismiss = { viewModel.closeCustomerRating() },
-            onSubmitRating = { providerId, rating, review ->
-                viewModel.submitCustomerRating(providerId, rating, review)
-            }
+            viewModel = viewModel,
+            onDismiss = { viewModel.closeCustomerRating() }
         )
     }
 
     if (isCustomSettlementOpen && selectedProviderForSettlement != null) {
         PaymentSettlementDialog(
             provider = selectedProviderForSettlement!!,
-            onDismiss = { viewModel.closeCustomSettlement() },
-            onSettlePayment = { amount, upiId ->
-                viewModel.processDirectUpiSettlement(context, selectedProviderForSettlement!!, amount, upiId)
-            }
+            viewModel = viewModel,
+            onDismiss = { viewModel.closeCustomSettlement() }
         )
     }
 
     if (selectedWhatsApp != null) {
         WhatsAppMessageDialog(
             provider = selectedWhatsApp!!,
-            onDismiss = { viewModel.closeWhatsApp() },
-            onSendMessage = { message ->
-                viewModel.sendWhatsAppMessage(context, selectedWhatsApp!!, message)
-            }
+            userLocationAddress = userLocation,
+            viewModel = viewModel,
+            onDismiss = { viewModel.openWhatsApp(null) }
         )
     }
 }
