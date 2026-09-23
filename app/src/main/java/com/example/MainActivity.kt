@@ -1,11 +1,11 @@
-package com.loksetu.app
+package com.aistudio.loksetu.vxqtmp
 
 import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
+import com.aistudio.loksetu.vxqtmp.R
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
