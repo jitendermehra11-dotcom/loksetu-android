@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 import com.aistudio.loksetu.vxqtmp.R
 
 class MainActivity : AppCompatActivity() {
@@ -25,8 +26,8 @@ class MainActivity : AppCompatActivity() {
         // 2. असली मर्चेंट UPI पेमेंट लिंक (PhonePe / GPay / Paytm)
         val btnMerchantPay = findViewById<View>(R.id.btnMerchantPay)
         btnMerchantPay?.setOnClickListener {
-            val upiUri = Uri.parse("upi://pay?pa=yourmerchant@upi&pn=LokSetu&mc=0000&mode=02&purpose=00")
-            val intent = Intent(Intent.ACTION_VIEW, upiUri)
+            val upiUrl = Uri.parse("upi://pay?pa=yourmerchant@upi&pn=LokSetu&mc=0000&mode=02&purpose=00")
+            val intent = Intent(Intent.ACTION_VIEW, upiUrl)
             startActivity(Intent.createChooser(intent, "पेमेंट ऐप चुनें"))
         }
     }
