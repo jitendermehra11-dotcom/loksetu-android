@@ -699,7 +699,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
         )
     }
 
-    // Existing App Dialogs (Corrected Signatures)
+    // Existing App Dialogs (Properly Matched Parameters)
     if (isSosDialogOpen) {
         SosEmergencyDialog(
             onDismiss = { viewModel.closeSosDialog() },
@@ -738,16 +738,20 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
 
     if (isCustomerRatingOpen) {
         CustomerRatingDialog(
-            viewModel = viewModel,
-            onDismiss = { viewModel.closeCustomerRating() }
+            onDismiss = { viewModel.closeCustomerRating() },
+            onSubmitRating = { providerId, providerRole, ratingScore, flagType, feedbackNote ->
+                viewModel.closeCustomerRating()
+            }
         )
     }
 
     if (isCustomSettlementOpen && selectedProviderForSettlement != null) {
         PaymentSettlementDialog(
             provider = selectedProviderForSettlement!!,
-            viewModel = viewModel,
-            onDismiss = { viewModel.closeCustomSettlement() }
+            onDismiss = { viewModel.closeCustomSettlement() },
+            onSettlePayment = { amount, upiId ->
+                viewModel.closeCustomSettlement()
+            }
         )
     }
 
@@ -755,8 +759,14 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
         WhatsAppMessageDialog(
             provider = selectedWhatsApp!!,
             userLocationAddress = userLocation,
-            viewModel = viewModel,
-            onDismiss = { viewModel.openWhatsApp(null) }
+            onDismiss = { viewModel.openWhatsApp(null) },
+            onSendMessage = { message ->
+                val intent = Intent(Intent.ACTION_VIEW).apply {
+                    data = Uri.parse("https://api.whatsapp.com/send?phone=${selectedWhatsApp!!.phone}&text=${Uri.encode(message)}")
+                }
+                context.startActivity(intent)
+                viewModel.openWhatsApp(null)
+            }
         )
     }
 }
