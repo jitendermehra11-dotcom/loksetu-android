@@ -10,11 +10,11 @@ plugins {
 }
 
 android {
-  namespace = "com.example"
+  namespace = "com.aistudio.loksetu.vxqtmp"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
 
   defaultConfig {
-    applicationId = "com.aistudio.loksetu.vxqtwp"
+  applicationId = "com.aistudio.loksetu.vxqtmp"
     minSdk = 24
     targetSdk = 36
     versionCode = 1
