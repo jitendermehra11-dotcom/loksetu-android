@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.util.Locale
 
-// पैकेज नेम R फाइल का सही इंपोर्ट
+// R फ़ाइल का सही पैकेज इंपोर्ट
 import com.aistudio.loksetu.vxqtmp.R
 import com.example.location.LocationHelper
 import com.example.ui.components.*
@@ -78,13 +78,13 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
     val isCustomerRatingOpen by viewModel.isCustomerRatingOpen.collectAsStateWithLifecycle()
     val isHindi = currentLanguage == AppLanguage.HINDI
 
-    // नए फीचर्स के लोकल स्टेट्स
+    // नए फीचर्स के स्टेट्स
     var showAdDialog by remember { mutableStateOf(false) }
     var showInsuranceDialog by remember { mutableStateOf(false) }
     var showVerificationDialog by remember { mutableStateOf(false) }
     var adIncome by remember { mutableStateOf(12.50) }
 
-    // वॉइस हेल्प (कम पढ़े-लिखे कर्मचारियों के लिए TextToSpeech)
+    // वॉइस हेल्प गाइड (TextToSpeech)
     var tts by remember { mutableStateOf<TextToSpeech?>(null) }
     DisposableEffect(context) {
         val textToSpeech = TextToSpeech(context) { status ->
@@ -115,7 +115,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
         }
     }
 
-    // Launch location detection once at startup if permitted
+    // Startup Location Check
     LaunchedEffect(Unit) {
         if (LocationHelper.hasLocationPermission(context)) {
             viewModel.detectGpsLocation(context)
@@ -130,7 +130,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
         }
     }
 
-    // Listen to ViewModel notices for Snackbar
+    // Snackbar Notices
     LaunchedEffect(Unit) {
         viewModel.userNoticeEvent.collect { notice ->
             snackbarHostState.showSnackbar(notice)
@@ -167,7 +167,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                     }
                 },
                 actions = {
-                    // Multi-Language Switcher
                     OutlinedButton(
                         onClick = { viewModel.toggleLanguage() },
                         shape = RoundedCornerShape(16.dp),
@@ -194,7 +193,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
 
                     Spacer(modifier = Modifier.width(2.dp))
 
-                    // Terms & Legal Guidelines Button
                     IconButton(
                         onClick = { viewModel.openTermsSheet() },
                         modifier = Modifier.testTag("top_open_terms_button")
@@ -206,19 +204,17 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         )
                     }
 
-                    // Customer Rating & Protection Button
                     IconButton(
                         onClick = { viewModel.openCustomerRating() },
                         modifier = Modifier.testTag("top_open_rating_button")
                     ) {
                         Icon(
                             imageVector = Icons.Default.Shield,
-                            contentDescription = "Customer Rating & Dispute Protection",
+                            contentDescription = "Customer Rating & Protection",
                             tint = Color(0xFFD81B60)
                         )
                     }
 
-                    // Emergency SOS Button
                     FilledTonalButton(
                         onClick = { viewModel.openSosDialog() },
                         colors = ButtonDefaults.filledTonalButtonColors(
@@ -245,7 +241,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
 
                     Spacer(modifier = Modifier.width(4.dp))
 
-                    // Contact History
                     IconButton(
                         onClick = { viewModel.openHistory() },
                         modifier = Modifier.testTag("open_history_button")
@@ -257,7 +252,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         )
                     }
 
-                    // Map View / GPS Picker
                     IconButton(
                         onClick = { viewModel.openLocationPicker() },
                         modifier = Modifier.testTag("top_open_map_picker_button")
@@ -339,7 +333,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         .padding(innerPadding),
                     contentPadding = PaddingValues(bottom = 84.dp)
                 ) {
-                    // 1. High-Accuracy GPS Location Status Bar
+                    // 1. GPS Location Status Bar
                     item {
                         Card(
                             modifier = Modifier
@@ -366,7 +360,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = if (userLocation.isNotEmpty()) userLocation else if (isHindi) "स्थान खोजा जा रहा है..." else "Detecting location...",
+                                        text = if (userLocation.isNotBlank()) userLocation else if (isHindi) "स्थान खोजा जा रहा है..." else "Detecting location...",
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.SemiBold,
                                         maxLines = 1,
@@ -395,7 +389,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         }
                     }
 
-                    // 2. वॉइस हेल्प कार्ड (कम पढ़े-लिखे भाइयों के लिए)
+                    // 2. वॉइस हेल्प कार्ड
                     item {
                         Card(
                             modifier = Modifier
@@ -429,7 +423,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         }
                     }
 
-                    // 3. प्रोग्रेसिव ट्रस्ट मॉडल (15 दिन वर्किंग ग्रेस पीरियड)
+                    // 3. प्रोग्रेसिव ट्रस्ट मॉडल (15 दिन ग्रेस)
                     item {
                         Card(
                             modifier = Modifier
@@ -530,7 +524,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         }
                     }
 
-                    // 5. दुर्घटना सुरक्षा बीमा (₹50 लाख नाइट/हाईवे, ₹25 लाख डे)
+                    // 5. दुर्घटना सुरक्षा बीमा
                     item {
                         Card(
                             modifier = Modifier
@@ -557,7 +551,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         }
                     }
 
-                    // 6. स्पॉन्सर्ड विज्ञापन व कमाई
+                    // 6. स्पॉन्सर्ड विज्ञापन
                     item {
                         Card(
                             modifier = Modifier
@@ -587,27 +581,18 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         }
                     }
 
-                    // 7. Category Selector Row
+                    // 7. Category Selector Row (Correct Parameter Signature)
                     item {
                         CategorySelectorRow(
                             selectedCategory = selectedCategory,
-                            onCategorySelected = { viewModel.selectCategory(it) }
+                            onSelectCategory = { viewModel.selectCategory(it) }
                         )
                     }
 
-                    // 8. Filter Options Row
+                    // 8. Filter Options Row (Correct Parameter Signature)
                     item {
                         FilterOptionsRow(
-                            searchQuery = searchQuery,
-                            onSearchQueryChange = { viewModel.setSearchQuery(it) },
-                            filterAvailableOnly = filterAvailableOnly,
-                            onToggleAvailable = { viewModel.toggleFilterAvailable() },
-                            filterVerifiedOnly = filterVerifiedOnly,
-                            onToggleVerified = { viewModel.toggleFilterVerified() },
-                            sortByDistance = sortByDistance,
-                            onToggleSortByDistance = { viewModel.toggleSortByDistance() },
-                            radiusKm = radiusKm,
-                            onRadiusChange = { viewModel.setRadiusFilterKm(it) }
+                            viewModel = viewModel
                         )
                     }
 
@@ -641,9 +626,8 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
         }
     }
 
-    // --- POPUP DIALOGS & BOTTOM SHEETS ---
+    // --- DIALOGS (Correct Parameter Signatures) ---
 
-    // 1. 15-दिन वेरिफिकेशन नियम डायलॉग
     if (showVerificationDialog) {
         AlertDialog(
             onDismissRequest = { showVerificationDialog = false },
@@ -664,7 +648,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
         )
     }
 
-    // 2. एड व्यू डायलॉग
     if (showAdDialog) {
         AlertDialog(
             onDismissRequest = { showAdDialog = false },
@@ -683,7 +666,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
         )
     }
 
-    // 3. इंश्योरेंस विवरण डायलॉग (₹50 लाख नाइट/हाईवे व ₹25 लाख डे-टाइम कवर)
     if (showInsuranceDialog) {
         AlertDialog(
             onDismissRequest = { showInsuranceDialog = false },
@@ -704,7 +686,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
         )
     }
 
-    // Existing App Dialogs
     if (isSosDialogOpen) {
         SosEmergencyDialog(
             onDismiss = { viewModel.closeSosDialog() },
@@ -715,9 +696,8 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
     if (isLocationPickerOpen) {
         GpsMapPickerDialog(
             onDismiss = { viewModel.closeLocationPicker() },
-            onLocationSelected = { locationName, lat, lng ->
-                viewModel.setCustomLocation(locationName, lat, lng)
-            }
+            onDetectGps = { viewModel.detectGpsLocation(context) },
+            onLocationConfirmed = { loc -> viewModel.setCustomLocation(loc, 0.0, 0.0) }
         )
     }
 
@@ -729,35 +709,43 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
 
     if (isServiceEscrowOpen && selectedProviderForEscrow != null) {
         ServiceEscrowDialog(
-            provider = selectedProviderForEscrow!!,
-            onDismiss = { viewModel.closeServiceEscrow() },
-            onConfirmEscrow = { amount -> viewModel.confirmEscrowDeposit(context, selectedProviderForEscrow!!, amount) }
+            viewModel = viewModel,
+            onDismiss = { viewModel.closeServiceEscrow() }
         )
     }
 
     if (isHomeVisitSafetyOpen) {
         HomeVisitSafetySheet(
+            viewModel = viewModel,
             onDismiss = { viewModel.closeHomeVisitSafety() }
         )
     }
 
     if (isCustomerRatingOpen) {
         CustomerRatingDialog(
+            viewModel = viewModel,
             onDismiss = { viewModel.closeCustomerRating() }
         )
     }
 
     if (isCustomSettlementOpen && selectedProviderForSettlement != null) {
         PaymentSettlementDialog(
-            provider = selectedProviderForSettlement!!,
+            viewModel = viewModel,
             onDismiss = { viewModel.closeCustomSettlement() }
         )
     }
 
     if (selectedWhatsApp != null) {
         WhatsAppMessageDialog(
-            provider = selectedWhatsApp!!,
-            onDismiss = { viewModel.openWhatsApp(null) }
+            userLocationAddress = userLocation,
+            onDismiss = { viewModel.closeWhatsApp() },
+            onSendMessage = { msg ->
+                val intent = Intent(Intent.ACTION_VIEW).apply {
+                    data = Uri.parse("https://api.whatsapp.com/send?phone=${selectedWhatsApp!!.phone}&text=${Uri.encode(msg)}")
+                }
+                context.startActivity(intent)
+                viewModel.closeWhatsApp()
+            }
         )
     }
 }
