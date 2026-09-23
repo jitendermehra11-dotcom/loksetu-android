@@ -85,7 +85,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.R
+import com.aistudio.loksetu.vxqtmp.R
 import com.example.location.LocationHelper
 import com.example.ui.components.CategorySelectorRow
 import com.example.ui.components.FilterOptionsRow
