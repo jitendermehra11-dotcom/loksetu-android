@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "121766526154",
+    "firebase_url": "https://loksetu-35c3d-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "loksetu-35c3d",
+    "storage_bucket": "loksetu-35c3d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:121766526154:android:ac0b6b197bb9d9c6da0833",
+        "android_client_info": {
+          "package_name": "com.aistudio.loksetu.vxqtmp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCzNLkIQemCnohHg-BkBihenqCt3GNfQVI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
