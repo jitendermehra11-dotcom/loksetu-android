@@ -74,7 +74,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
     DisposableEffect(context) {
         val textToSpeech = TextToSpeech(context) { status ->
             if (status == TextToSpeech.SUCCESS) {
-                // TTS Initialized
+                // TTS Initialization
             }
         }
         textToSpeech.language = Locale("hi", "IN")
@@ -526,7 +526,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
 
     if (isSosDialogOpen) {
         SosEmergencyDialog(
-            viewModel,
+            viewModel = viewModel,
             onDismiss = { viewModel.closeSosDialog() }
         )
     }
@@ -547,21 +547,18 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
 
     if (isTermsSheetOpen) {
         TermsAndLegalSheet(
-            viewModel,
             onDismiss = { viewModel.closeTermsSheet() }
         )
     }
 
     if (isHomeVisitSafetyOpen) {
         HomeVisitSafetySheet(
-            viewModel,
             onDismiss = { viewModel.closeHomeVisitSafety() }
         )
     }
 
     if (isCustomerRatingOpen) {
         CustomerRatingDialog(
-            viewModel,
             onDismiss = { viewModel.closeCustomerRating() }
         )
     }
