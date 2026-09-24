@@ -46,6 +46,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
     val currentSection by viewModel.currentSection.collectAsStateWithLifecycle()
     val isSosDialogOpen by viewModel.isSosDialogOpen.collectAsStateWithLifecycle()
     val isCustomSettlementOpen by viewModel.isCustomSettlementOpen.collectAsStateWithLifecycle()
+    val selectedProviderForSettlement by viewModel.selectedProviderForSettlement.collectAsStateWithLifecycle()
 
     val userLocation by viewModel.userLocation.collectAsStateWithLifecycle()
     val isDetectingLocation by viewModel.isDetectingLocation.collectAsStateWithLifecycle()
@@ -61,7 +62,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
     val isLocationPickerOpen by viewModel.isLocationPickerOpen.collectAsStateWithLifecycle()
     val currentLanguage by viewModel.currentLanguage.collectAsStateWithLifecycle()
     val isTermsSheetOpen by viewModel.isTermsSheetOpen.collectAsStateWithLifecycle()
-    val isServiceEscrowOpen by viewModel.isServiceEscrowOpen.collectAsStateWithLifecycle()
     val isHomeVisitSafetyOpen by viewModel.isHomeVisitSafetyOpen.collectAsStateWithLifecycle()
     val isCustomerRatingOpen by viewModel.isCustomerRatingOpen.collectAsStateWithLifecycle()
     val isHindi = (currentLanguage == AppLanguage.HINDI)
@@ -327,7 +327,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = if (userLocation.isNotBlank()) userLocation else if (isHindi) "स्थान खोजा जा रहा है..." else "Detecting location...",
+                                        text = if (userLocation.toString().isNotBlank()) userLocation.toString() else if (isHindi) "स्थान खोजा जा रहा है..." else "Detecting location...",
                                         fontWeight = FontWeight.SemiBold,
                                         fontSize = 13.sp,
                                         maxLines = 1,
@@ -558,10 +558,14 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                     items(providers) { provider ->
                         ProviderCard(
                             provider = provider,
+                            distanceKm = 0.0,
+                            onClick = { viewModel.openDetail(provider) },
                             onCallClick = { viewModel.initiateCall(context, provider) },
                             onWhatsAppClick = { viewModel.openWhatsApp(provider) },
                             onDetailClick = { viewModel.openDetail(provider) },
                             onEscrowClick = { viewModel.openServiceEscrow(provider) },
+                            onDirectionsClick = { },
+                            onFavoriteClick = { },
                             onHomeVisitSafetyClick = { viewModel.openHomeVisitSafety() }
                         )
                     }
@@ -640,7 +644,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
 
     if (isSosDialogOpen) {
         SosEmergencyDialog(
-            viewModel = viewModel,
             onDismiss = { viewModel.closeSosDialog() }
         )
     }
@@ -652,44 +655,46 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
             accuracyMeters = 0.0f,
             isDetecting = isDetectingLocation,
             onDetectGps = { viewModel.detectGpsLocation(context) },
-            onLocationConfirmed = { loc -> viewModel.setCustomLocation(loc, 0.0, 0.0) },
+            onLocationConfirmed = { lat, lng, address -> 
+                viewModel.detectGpsLocation(context)
+            },
             onDismiss = { viewModel.closeLocationPicker() }
         )
     }
 
     if (isTermsSheetOpen) {
         TermsAndLegalSheet(
-            viewModel = viewModel,
             onDismiss = { viewModel.closeTermsSheet() }
         )
     }
 
     if (isHomeVisitSafetyOpen) {
         HomeVisitSafetySheet(
-            viewModel = viewModel,
             onDismiss = { viewModel.closeHomeVisitSafety() }
         )
     }
 
     if (isCustomerRatingOpen) {
         CustomerRatingDialog(
-            viewModel = viewModel,
             onDismiss = { viewModel.closeCustomerRating() }
         )
     }
 
-    if (isCustomSettlementOpen) {
+    if (isCustomSettlementOpen && selectedProviderForSettlement != null) {
         PaymentSettlementDialog(
-            viewModel = viewModel,
+            provider = selectedProviderForSettlement!!,
             onDismiss = { viewModel.closeCustomSettlement() }
         )
     }
 
     if (selectedWhatsApp != null) {
         WhatsAppMessageDialog(
-            viewModel = viewModel,
-            userLocationAddress = userLocation,
-            onDismiss = { viewModel.closeWhatsApp() }
+            provider = selectedWhatsApp!!,
+            userLocationAddress = userLocation.toString(),
+            onDismiss = { viewModel.openWhatsApp(null) },
+            onSendMessage = { message ->
+                viewModel.sendWhatsAppMessage(context, selectedWhatsApp!!, message)
+            }
         )
     }
 }
