@@ -541,16 +541,28 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                     }
 
                     item {
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { viewModel.setSearchQuery(it) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 4.dp),
+                            placeholder = { Text("खोजें (Search service or worker...)") },
+                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                    }
+
+                    item {
                         CategorySelectorRow(
                             selectedCategory = selectedCategory,
-                            onSelectCategory = { viewModel.selectCategory(it) }
+                            onSelectCategory = { viewModel.setCategory(it) }
                         )
                     }
 
                     item {
                         FilterOptionsRow(
-                            query = searchQuery,
-                            onQueryChange = { viewModel.setSearchQuery(it) },
                             availableOnly = filterAvailableOnly,
                             onToggleAvailable = { viewModel.toggleAvailableOnly() },
                             verifiedOnly = filterVerifiedOnly,
@@ -658,35 +670,39 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
 
     if (isSosDialogOpen) {
         SosEmergencyDialog(
-            viewModel = viewModel,
-            onDismiss = { viewModel.closeSosDialog() }
+            onDismiss = { viewModel.closeSosDialog() },
+            onTriggerSos = { viewModel.triggerSosAlert(context) }
         )
     }
 
     if (isLocationPickerOpen) {
         GpsMapPickerDialog(
-            viewModel = viewModel,
+            initialLat = 0.0,
+            initialLng = 0.0,
+            accuracyMeters = 0.0f,
+            isDetecting = isDetectingLocation,
+            onDetectGps = { viewModel.detectGpsLocation(context) },
+            onLocationConfirmed = { lat, lng, address ->
+                viewModel.detectGpsLocation(context)
+            },
             onDismiss = { viewModel.closeLocationPicker() }
         )
     }
 
     if (isTermsSheetOpen) {
         TermsAndLegalSheet(
-            viewModel = viewModel,
             onDismiss = { viewModel.closeTermsSheet() }
         )
     }
 
     if (isHomeVisitSafetyOpen) {
         HomeVisitSafetySheet(
-            viewModel = viewModel,
             onDismiss = { viewModel.closeHomeVisitSafety() }
         )
     }
 
     if (isCustomerRatingOpen) {
         CustomerRatingDialog(
-            viewModel = viewModel,
             onDismiss = { viewModel.closeCustomerRating() }
         )
     }
@@ -702,13 +718,12 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
         WhatsAppMessageDialog(
             provider = selectedWhatsApp!!,
             userLocationAddress = userLocation.toString(),
-            onDismiss = { viewModel.setSelectedProviderForWhatsApp(null) },
+            onDismiss = { },
             onSendMessage = { message ->
                 val intent = Intent(Intent.ACTION_VIEW).apply {
                     data = Uri.parse("https://api.whatsapp.com/send?phone=${selectedWhatsApp!!.phone}&text=${Uri.encode(message)}")
                 }
                 context.startActivity(intent)
-                viewModel.setSelectedProviderForWhatsApp(null)
             }
         )
     }
