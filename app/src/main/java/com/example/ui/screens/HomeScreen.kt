@@ -548,22 +548,13 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                     item {
                         CategorySelectorRow(
                             selectedCategory = selectedCategory,
-                            onCategorySelected = { viewModel.selectCategory(it) }
+                            onSelectCategory = { viewModel.selectCategory(it) }
                         )
                     }
 
                     item {
                         FilterOptionsRow(
-                            searchQuery = searchQuery,
-                            onSearchQueryChange = { viewModel.setSearchQuery(it) },
-                            filterAvailableOnly = filterAvailableOnly,
-                            onToggleAvailable = { viewModel.toggleFilterAvailable() },
-                            filterVerifiedOnly = filterVerifiedOnly,
-                            onToggleVerified = { viewModel.toggleFilterVerified() },
-                            sortByDistance = sortByDistance,
-                            onToggleSortByDistance = { viewModel.toggleSortByDistance() },
-                            radiusKm = radiusKm,
-                            onRadiusChange = { viewModel.setRadiusFilterKm(it) }
+                            viewModel = viewModel
                         )
                     }
 
@@ -574,7 +565,8 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                             onWhatsAppClick = { viewModel.openWhatsApp(provider) },
                             onDetailClick = { viewModel.openDetail(provider) },
                             onEscrowClick = { viewModel.openServiceEscrow(provider) },
-                            onHomeVisitSafetyClick = { viewModel.openHomeVisitSafety() }
+                            onHomeVisitSafetyClick = { viewModel.openHomeVisitSafety() },
+                            onFavoriteClick = { /* Optional Favorite Callback */ }
                         )
                     }
                 }
@@ -656,29 +648,56 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
 
     if (isSosDialogOpen) {
         SosEmergencyDialog(
-            onDismiss = { viewModel.closeSosDialog() },
-            onTriggerSos = { viewModel.triggerSosAlert(context) }
+            viewModel = viewModel,
+            onDismiss = { viewModel.closeSosDialog() }
         )
     }
 
     if (isLocationPickerOpen) {
         GpsMapPickerDialog(
-            onDismiss = { viewModel.closeLocationPicker() },
-            onLocationSelected = { locationName, lat, lng ->
-                viewModel.setCustomLocation(locationName, lat, lng)
-            }
+            initialLat = 0.0,
+            initialLng = 0.0,
+            accuracyMeters = 0.0f,
+            isDetecting = isDetectingLocation,
+            onDetectGps = { viewModel.detectGpsLocation(context) },
+            onLocationConfirmed = { loc -> viewModel.setCustomLocation(loc, 0.0, 0.0) },
+            onDismiss = { viewModel.closeLocationPicker() }
         )
     }
 
     if (isTermsSheetOpen) {
         TermsAndLegalSheet(
+            viewModel = viewModel,
             onDismiss = { viewModel.closeTermsSheet() }
         )
     }
 
     if (isHomeVisitSafetyOpen) {
         HomeVisitSafetySheet(
+            viewModel = viewModel,
             onDismiss = { viewModel.closeHomeVisitSafety() }
+        )
+    }
+
+    if (isCustomerRatingOpen) {
+        CustomerRatingDialog(
+            viewModel = viewModel,
+            onDismiss = { viewModel.closeCustomerRating() }
+        )
+    }
+
+    if (isCustomSettlementOpen) {
+        PaymentSettlementDialog(
+            viewModel = viewModel,
+            onDismiss = { viewModel.closeCustomSettlement() }
+        )
+    }
+
+    if (selectedWhatsApp != null) {
+        WhatsAppMessageDialog(
+            viewModel = viewModel,
+            userLocationAddress = userLocation,
+            onDismiss = { viewModel.closeWhatsApp() }
         )
     }
 }
