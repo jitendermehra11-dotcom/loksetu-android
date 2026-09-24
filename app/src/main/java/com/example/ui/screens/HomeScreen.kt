@@ -22,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -65,18 +64,17 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
     val isServiceEscrowOpen by viewModel.isServiceEscrowOpen.collectAsStateWithLifecycle()
     val isHomeVisitSafetyOpen by viewModel.isHomeVisitSafetyOpen.collectAsStateWithLifecycle()
     val isCustomerRatingOpen by viewModel.isCustomerRatingOpen.collectAsStateWithLifecycle()
-    val isHindi = currentLanguage == AppLanguage.HINDI
+    val isHindi = (currentLanguage == AppLanguage.HINDI)
 
     var showAdDialog by remember { mutableStateOf(false) }
     var showInsuranceDialog by remember { mutableStateOf(false) }
     var showVerificationDialog by remember { mutableStateOf(false) }
-    var adIncome by remember { mutableStateOf(12.50) }
 
     var tts by remember { mutableStateOf<TextToSpeech?>(null) }
     DisposableEffect(context) {
         val textToSpeech = TextToSpeech(context) { status ->
             if (status == TextToSpeech.SUCCESS) {
-                // TTS Initialized
+                // TTS Success
             }
         }
         textToSpeech.language = Locale("hi", "IN")
@@ -246,40 +244,40 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                 tonalElevation = 6.dp
             ) {
                 NavigationBarItem(
-                    selected = currentSection == AppSection.PROVIDERS,
+                    selected = (currentSection == AppSection.PROVIDERS),
                     onClick = { viewModel.setSection(AppSection.PROVIDERS) },
                     icon = { Icon(Icons.Default.Storefront, contentDescription = "Directory") },
-                    label = { Text("Directory", fontSize = 10.sp) }
+                    label = { Text(text = "Directory", fontSize = 10.sp) }
                 )
                 NavigationBarItem(
-                    selected = currentSection == AppSection.STORE_DELIVERY,
+                    selected = (currentSection == AppSection.STORE_DELIVERY),
                     onClick = { viewModel.setSection(AppSection.STORE_DELIVERY) },
                     icon = { Icon(Icons.Default.LocalShipping, contentDescription = "Store Delivery") },
-                    label = { Text("Delivery", fontSize = 10.sp) }
+                    label = { Text(text = "Delivery", fontSize = 10.sp) }
                 )
                 NavigationBarItem(
-                    selected = currentSection == AppSection.JOBS,
+                    selected = (currentSection == AppSection.JOBS),
                     onClick = { viewModel.setSection(AppSection.JOBS) },
                     icon = { Icon(Icons.Default.BusinessCenter, contentDescription = "Jobs") },
-                    label = { Text("Jobs", fontSize = 10.sp) }
+                    label = { Text(text = "Jobs", fontSize = 10.sp) }
                 )
                 NavigationBarItem(
-                    selected = currentSection == AppSection.DIRECT_DEALS,
+                    selected = (currentSection == AppSection.DIRECT_DEALS),
                     onClick = { viewModel.setSection(AppSection.DIRECT_DEALS) },
                     icon = { Icon(Icons.Default.Handshake, contentDescription = "Farm Deals") },
-                    label = { Text("Deals", fontSize = 10.sp) }
+                    label = { Text(text = "Deals", fontSize = 10.sp) }
                 )
                 NavigationBarItem(
-                    selected = currentSection == AppSection.WELFARE_FUND,
+                    selected = (currentSection == AppSection.WELFARE_FUND),
                     onClick = { viewModel.setSection(AppSection.WELFARE_FUND) },
                     icon = { Icon(Icons.Default.Shield, contentDescription = "Driver Welfare") },
-                    label = { Text("Welfare", fontSize = 10.sp) }
+                    label = { Text(text = "Welfare", fontSize = 10.sp) }
                 )
                 NavigationBarItem(
-                    selected = currentSection == AppSection.SETTLEMENT,
+                    selected = (currentSection == AppSection.SETTLEMENT),
                     onClick = { viewModel.setSection(AppSection.SETTLEMENT) },
                     icon = { Icon(Icons.Default.Payments, contentDescription = "Settlement") },
-                    label = { Text("Settlement", fontSize = 10.sp) }
+                    label = { Text(text = "Settlement", fontSize = 10.sp) }
                 )
             }
         },
@@ -288,7 +286,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                 ExtendedFloatingActionButton(
                     onClick = { viewModel.openAddProvider() },
                     icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                    text = { Text("Register Service", fontWeight = FontWeight.SemiBold) },
+                    text = { Text(text = "Register Service", fontWeight = FontWeight.SemiBold) },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                     shape = RoundedCornerShape(24.dp)
@@ -470,7 +468,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5)),
                                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                                     ) {
-                                        Text("📞 डायरेक्ट कॉल", fontSize = 12.sp)
+                                        Text(text = "📞 डायरेक्ट कॉल", fontSize = 12.sp)
                                     }
 
                                     Button(
@@ -483,7 +481,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF43A047)),
                                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                                     ) {
-                                        Text("💬 WhatsApp", fontSize = 12.sp)
+                                        Text(text = "💬 WhatsApp", fontSize = 12.sp)
                                     }
                                 }
                             }
@@ -523,7 +521,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                                 .padding(horizontal = 16.dp, vertical = 4.dp)
                                 .clickable {
                                     showAdDialog = true
-                                    adIncome += 0.50
                                 },
                             shape = RoundedCornerShape(12.dp),
                             colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0))
@@ -565,8 +562,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                             onWhatsAppClick = { viewModel.openWhatsApp(provider) },
                             onDetailClick = { viewModel.openDetail(provider) },
                             onEscrowClick = { viewModel.openServiceEscrow(provider) },
-                            onHomeVisitSafetyClick = { viewModel.openHomeVisitSafety() },
-                            onFavoriteClick = { /* Optional Favorite Callback */ }
+                            onHomeVisitSafetyClick = { viewModel.openHomeVisitSafety() }
                         )
                     }
                 }
@@ -579,7 +575,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "LokSetu ${currentSection.name} Module Active",
+                        text = "LokSetu Active Module",
                         color = MaterialTheme.colorScheme.primary,
                         fontSize = 16.sp
                     )
@@ -591,18 +587,16 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
     if (showVerificationDialog) {
         AlertDialog(
             onDismissRequest = { showVerificationDialog = false },
-            title = { Text("🔰 15-दिन वर्किंग ग्रेस मॉडल", fontSize = 16.sp, fontWeight = FontWeight.Bold) },
+            title = { Text(text = "🔰 15-दिन वर्किंग ग्रेस मॉडल", fontSize = 16.sp, fontWeight = FontWeight.Bold) },
             text = {
                 Text(
-                    "• कम पढ़े-लिखे कामगार और नए सदस्य पहले दिन से ही बिना किसी रुकावट के काम शुरू कर सकते हैं।\n" +
-                    "• कागजी वेरिफिकेशन पूरा करने के लिए 15 दिनों की छूट मिलती है।\n" +
-                    "• लगातार ईमानदारी से काम करने पर '5-Star Verified Worker' का दर्जा दिया जाता है।",
+                    text = "• कम पढ़े-लिखे कामगार और नए सदस्य पहले दिन से ही बिना किसी रुकावट के काम शुरू कर सकते हैं।\n• कागजी वेरिफिकेशन पूरा करने के लिए 15 दिनों की छूट मिलती है।\n• लगातार ईमानदारी से काम करने पर '5-Star Verified Worker' का दर्जा दिया जाता है।",
                     fontSize = 13.sp
                 )
             },
             confirmButton = {
                 TextButton(onClick = { showVerificationDialog = false }) {
-                    Text("समझ गया")
+                    Text(text = "समझ गया")
                 }
             }
         )
@@ -611,16 +605,16 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
     if (showAdDialog) {
         AlertDialog(
             onDismissRequest = { showAdDialog = false },
-            title = { Text("🎬 प्रायोजित विज्ञापन", fontSize = 16.sp, fontWeight = FontWeight.Bold) },
+            title = { Text(text = "🎬 प्रायोजित विज्ञापन", fontSize = 16.sp, fontWeight = FontWeight.Bold) },
             text = {
                 Text(
-                    "विज्ञापन देखने के लिए धन्यवाद!\n₹0.50 आपके ऐप वॉलेट में जोड़ दिए गए हैं।",
+                    text = "विज्ञापन देखने के लिए धन्यवाद!\n₹0.50 आपके ऐप वॉलेट में जोड़ दिए गए हैं।",
                     fontSize = 13.sp
                 )
             },
             confirmButton = {
                 TextButton(onClick = { showAdDialog = false }) {
-                    Text("ठीक है")
+                    Text(text = "ठीक है")
                 }
             }
         )
@@ -629,18 +623,16 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
     if (showInsuranceDialog) {
         AlertDialog(
             onDismissRequest = { showInsuranceDialog = false },
-            title = { Text("🛡️ LokSetu दुर्घटना बीमा पॉलिसी", fontSize = 16.sp, fontWeight = FontWeight.Bold) },
+            title = { Text(text = "🛡️ LokSetu दुर्घटना बीमा पॉलिसी", fontSize = 16.sp, fontWeight = FontWeight.Bold) },
             text = {
                 Text(
-                    "• 🌌 नाइट / हाईवे राइडर्स कवर: रात के समय व हाईवे राइडर/ड्राइवर के लिए दुर्घटना में मृत्यु या पूर्ण विकलांगता पर ₹50 लाख का बीमा कवर।\n" +
-                    "• ☀️ डे-टाइम कामगार कवर: दिन के कामकाजी घंटों के दौरान ₹25 लाख का एक्सीडेंटल डेथ/सुरक्षा कवर।\n" +
-                    "• 🚑 24x7 इमरजेंसी रोड-साइड व कानूनी सहायता।",
+                    text = "• 🌌 नाइट / हाईवे राइडर्स कवर: रात के समय व हाईवे राइडर/ड्राइवर के लिए दुर्घटना में मृत्यु या पूर्ण विकलांगता पर ₹50 लाख का बीमा कवर।\n• ☀️ डे-टाइम कामगार कवर: दिन के कामकाजी घंटों के दौरान ₹25 लाख का एक्सीडेंटल डेथ/सुरक्षा कवर।\n• 🚑 24x7 इमरजेंसी रोड-साइड व कानूनी सहायता।",
                     fontSize = 13.sp
                 )
             },
             confirmButton = {
                 TextButton(onClick = { showInsuranceDialog = false }) {
-                    Text("ठीक है")
+                    Text(text = "ठीक है")
                 }
             }
         )
