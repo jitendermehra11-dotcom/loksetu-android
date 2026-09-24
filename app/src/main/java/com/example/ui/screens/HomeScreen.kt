@@ -545,13 +545,22 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                     item {
                         CategorySelectorRow(
                             selectedCategory = selectedCategory,
-                            onSelectCategory = { viewModel.selectCategory(it) }
+                            onSelectCategory = { viewModel.setSelectedCategory(it) }
                         )
                     }
 
                     item {
                         FilterOptionsRow(
-                            viewModel = viewModel
+                            searchQuery = searchQuery,
+                            onSearchQueryChange = { viewModel.setSearchQuery(it) },
+                            availableOnly = filterAvailableOnly,
+                            onToggleAvailable = { viewModel.toggleFilterAvailable() },
+                            verifiedOnly = filterVerifiedOnly,
+                            onToggleVerified = { viewModel.toggleFilterVerified() },
+                            sortByDistance = sortByDistance,
+                            onToggleSortDistance = { viewModel.toggleSortByDistance() },
+                            radiusKm = radiusKm,
+                            onRadiusChange = { viewModel.setRadiusFilterKm(it) }
                         )
                     }
 
@@ -644,7 +653,8 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
 
     if (isSosDialogOpen) {
         SosEmergencyDialog(
-            onDismiss = { viewModel.closeSosDialog() }
+            onDismiss = { viewModel.closeSosDialog() },
+            onTriggerSos = { viewModel.triggerSosAlert(context) }
         )
     }
 
@@ -693,7 +703,11 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
             userLocationAddress = userLocation.toString(),
             onDismiss = { viewModel.openWhatsApp(null) },
             onSendMessage = { message ->
-                viewModel.sendWhatsAppMessage(context, selectedWhatsApp!!, message)
+                val intent = Intent(Intent.ACTION_VIEW).apply {
+                    data = Uri.parse("https://api.whatsapp.com/send?phone=${selectedWhatsApp!!.phone}&text=${Uri.encode(message)}")
+                }
+                context.startActivity(intent)
+                viewModel.openWhatsApp(null)
             }
         )
     }
