@@ -547,7 +547,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
 
     if (isTermsSheetOpen) {
         TermsAndLegalSheet(
-            viewModel = viewModel,
             onDismiss = { viewModel.closeTermsSheet() }
         )
     }
@@ -569,6 +568,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
     if (isCustomSettlementOpen && selectedProviderForSettlement != null) {
         PaymentSettlementDialog(
             provider = selectedProviderForSettlement!!,
+            viewModel = viewModel,
             onDismiss = { viewModel.closeCustomSettlement() }
         )
     }
