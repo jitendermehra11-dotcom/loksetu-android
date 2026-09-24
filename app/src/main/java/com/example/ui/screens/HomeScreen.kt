@@ -570,7 +570,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                             sortByDistance = sortByDistance,
                             onToggleSortDistance = { viewModel.toggleSortByDistance() },
                             radiusKm = radiusKm,
-                            onSetRadius = { viewModel.setRadiusKm(it) }
+                            onSetRadius = { viewModel.setRadius(it) }
                         )
                     }
 
@@ -670,8 +670,8 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
 
     if (isSosDialogOpen) {
         SosEmergencyDialog(
-            onDismiss = { viewModel.closeSosDialog() },
-            onTriggerSos = { viewModel.triggerSosAlert(context) }
+            viewModel = viewModel,
+            onDismiss = { viewModel.closeSosDialog() }
         )
     }
 
@@ -691,18 +691,21 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
 
     if (isTermsSheetOpen) {
         TermsAndLegalSheet(
+            viewModel = viewModel,
             onDismiss = { viewModel.closeTermsSheet() }
         )
     }
 
     if (isHomeVisitSafetyOpen) {
         HomeVisitSafetySheet(
+            viewModel = viewModel,
             onDismiss = { viewModel.closeHomeVisitSafety() }
         )
     }
 
     if (isCustomerRatingOpen) {
         CustomerRatingDialog(
+            viewModel = viewModel,
             onDismiss = { viewModel.closeCustomerRating() }
         )
     }
