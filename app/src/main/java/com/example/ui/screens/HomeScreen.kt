@@ -6,15 +6,12 @@ import android.net.Uri
 import android.speech.tts.TextToSpeech
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -24,7 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -51,7 +47,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
     val currentSection by viewModel.currentSection.collectAsStateWithLifecycle()
     val isSosDialogOpen by viewModel.isSosDialogOpen.collectAsStateWithLifecycle()
     val isCustomSettlementOpen by viewModel.isCustomSettlementOpen.collectAsStateWithLifecycle()
-    val selectedProviderForSettlement by viewModel.selectedProviderForSettlement.collectAsStateWithLifecycle()
 
     val userLocation by viewModel.userLocation.collectAsStateWithLifecycle()
     val isDetectingLocation by viewModel.isDetectingLocation.collectAsStateWithLifecycle()
@@ -68,7 +63,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
     val currentLanguage by viewModel.currentLanguage.collectAsStateWithLifecycle()
     val isTermsSheetOpen by viewModel.isTermsSheetOpen.collectAsStateWithLifecycle()
     val isServiceEscrowOpen by viewModel.isServiceEscrowOpen.collectAsStateWithLifecycle()
-    val selectedProviderForEscrow by viewModel.selectedProviderForEscrow.collectAsStateWithLifecycle()
     val isHomeVisitSafetyOpen by viewModel.isHomeVisitSafetyOpen.collectAsStateWithLifecycle()
     val isCustomerRatingOpen by viewModel.isCustomerRatingOpen.collectAsStateWithLifecycle()
     val isHindi = currentLanguage == AppLanguage.HINDI
@@ -82,7 +76,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
     DisposableEffect(context) {
         val textToSpeech = TextToSpeech(context) { status ->
             if (status == TextToSpeech.SUCCESS) {
-                // TTS initialized
+                // TTS Initialized
             }
         }
         textToSpeech.language = Locale("hi", "IN")
@@ -310,7 +304,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         .padding(innerPadding),
                     contentPadding = PaddingValues(bottom = 84.dp)
                 ) {
-                    // 1. Location Bar
                     item {
                         Card(
                             modifier = Modifier
@@ -365,7 +358,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         }
                     }
 
-                    // 2. Voice Assistance Card
                     item {
                         Card(
                             modifier = Modifier
@@ -399,7 +391,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         }
                     }
 
-                    // 3. Progressive Grace Period Card
                     item {
                         Card(
                             modifier = Modifier
@@ -443,7 +434,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         }
                     }
 
-                    // 4. Buyer Direct Call & WhatsApp Card
                     item {
                         Card(
                             modifier = Modifier
@@ -500,7 +490,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         }
                     }
 
-                    // 5. Insurance Card
                     item {
                         Card(
                             modifier = Modifier
@@ -527,7 +516,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         }
                     }
 
-                    // 6. Sponsored Ad Card (Clean Text)
                     item {
                         Card(
                             modifier = Modifier
@@ -557,7 +545,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         }
                     }
 
-                    // 7. Category Selector
                     item {
                         CategorySelectorRow(
                             selectedCategory = selectedCategory,
@@ -565,7 +552,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         )
                     }
 
-                    // 8. Filter Options Row
                     item {
                         FilterOptionsRow(
                             searchQuery = searchQuery,
@@ -581,7 +567,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         )
                     }
 
-                    // 9. Provider List
                     items(providers) { provider ->
                         ProviderCard(
                             provider = provider,
@@ -610,8 +595,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
             }
         }
     }
-
-    // --- POPUP DIALOGS ---
 
     if (showVerificationDialog) {
         AlertDialog(
@@ -693,46 +676,9 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
         )
     }
 
-    if (isServiceEscrowOpen && selectedProviderForEscrow != null) {
-        ServiceEscrowDialog(
-            provider = selectedProviderForEscrow!!,
-            onDismiss = { viewModel.closeServiceEscrow() },
-            onConfirmEscrow = { amount -> viewModel.confirmEscrowDeposit(context, selectedProviderForEscrow!!, amount) }
-        )
-    }
-
     if (isHomeVisitSafetyOpen) {
         HomeVisitSafetySheet(
             onDismiss = { viewModel.closeHomeVisitSafety() }
-        )
-    }
-
-    if (isCustomerRatingOpen) {
-        CustomerRatingDialog(
-            onDismiss = { viewModel.closeCustomerRating() },
-            onSubmitRating = { providerId, rating, review ->
-                viewModel.submitCustomerRating(providerId, rating, review)
-            }
-        )
-    }
-
-    if (isCustomSettlementOpen && selectedProviderForSettlement != null) {
-        PaymentSettlementDialog(
-            provider = selectedProviderForSettlement!!,
-            onDismiss = { viewModel.closeCustomSettlement() },
-            onSettlePayment = { amount, upiId ->
-                viewModel.processDirectUpiSettlement(context, selectedProviderForSettlement!!, amount, upiId)
-            }
-        )
-    }
-
-    if (selectedWhatsApp != null) {
-        WhatsAppMessageDialog(
-            provider = selectedWhatsApp!!,
-            onDismiss = { viewModel.closeWhatsApp() },
-            onSendMessage = { message ->
-                viewModel.sendWhatsAppMessage(context, selectedWhatsApp!!, message)
-            }
         )
     }
 }
