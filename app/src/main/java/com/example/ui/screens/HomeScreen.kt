@@ -74,7 +74,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
     DisposableEffect(context) {
         val textToSpeech = TextToSpeech(context) { status ->
             if (status == TextToSpeech.SUCCESS) {
-                // TTS Initialization
+                // TTS success
             }
         }
         textToSpeech.language = Locale("hi", "IN")
@@ -215,7 +215,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(2.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
 
                     IconButton(onClick = { viewModel.openHistory() }) {
                         Icon(
@@ -362,7 +362,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 4.dp)
                                 .clickable {
-                                    speakText("लोकसेतु ऐप में आपका स्वागत है। यहाँ आप सीधा काम पा सकते हैं, बायर से बात कर सकते हैं।")
+                                    speakText("लोकसेतु ऐप में आपका स्वागत है। यहाँ आप सीधा काम पा सकते हैं, बायर से बात कर सकते हैं और ₹50 लाख तक का दुर्घटना सुरक्षा बीमा प्राप्त कर सकते हैं।")
                                 },
                             shape = RoundedCornerShape(12.dp),
                             colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF8E1))
@@ -424,7 +424,115 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                                 }
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = "पहले ही दिन से काम शुरू करें। विवरण देखें ➔",
+                                    text = "पहले ही दिन से काम शुरू करें। कागजी कार्रवाई के लिए 15 दिन का समय है। विवरण देखें ➔",
+                                    color = Color(0xFF424242),
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+                    }
+
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 4.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD))
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text(
+                                    text = "📞 बायर / ग्राहक से सीधे संपर्क करें",
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF1565C0),
+                                    fontSize = 13.sp
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "बिना किसी ठेकेदार के सीधी बात और 100% दैनिक भुगतान",
+                                    color = Color(0xFF616161),
+                                    fontSize = 11.sp
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Button(
+                                        onClick = {
+                                            val intent = Intent(Intent.ACTION_DIAL).apply {
+                                                data = Uri.parse("tel:+919876543210")
+                                            }
+                                            context.startActivity(intent)
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5)),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                    ) {
+                                        Text(text = "📞 डायरेक्ट कॉल", fontSize = 12.sp)
+                                    }
+
+                                    Button(
+                                        onClick = {
+                                            val intent = Intent(Intent.ACTION_VIEW).apply {
+                                                data = Uri.parse("https://api.whatsapp.com/send?phone=919876543210&text=नमस्कार, LokSetu ऐप से संपर्क कर रहे हैं।")
+                                            }
+                                            context.startActivity(intent)
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF43A047)),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                    ) {
+                                        Text(text = "💬 WhatsApp", fontSize = 12.sp)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 4.dp)
+                                .clickable { showInsuranceDialog = true },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9))
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text(
+                                    text = "🛡️ LokSetu दुर्घटना बीमा (₹25 लाख - ₹50 लाख)",
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF2E7D32),
+                                    fontSize = 13.sp
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "नाइट/हाईवे राइडर्स हेतु ₹50 लाख व डे-टाइम हेतु ₹25 लाख एक्सीडेंटल कवर। विवरण देखें ➔",
+                                    color = Color(0xFF424242),
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+                    }
+
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 4.dp)
+                                .clickable { showAdDialog = true },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0))
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text(
+                                    text = "📢 प्रायोजित विज्ञापन (Ad Section)",
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFE65100),
+                                    fontSize = 13.sp
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "विज्ञापन देखें और वॉलेट बैलेंस बढ़ाएं। कुल ऐड बोनस: ₹12.50",
                                     color = Color(0xFF424242),
                                     fontSize = 11.sp
                                 )
@@ -462,7 +570,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                             sortByDistance = sortByDistance,
                             onToggleSortDistance = { viewModel.toggleSortByDistance() },
                             radiusKm = radiusKm,
-                            onSetRadius = { viewModel.setRadiusFilterKm(it) }
+                            onSetRadius = { viewModel.setRadiusFilter(it) }
                         )
                     }
 
@@ -512,7 +620,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
             title = { Text(text = "🔰 15-दिन वर्किंग ग्रेस मॉडल", fontSize = 16.sp, fontWeight = FontWeight.Bold) },
             text = {
                 Text(
-                    text = "• कामगार पहले दिन से ही काम शुरू कर सकते हैं।\n• वेरिफिकेशन के लिए 15 दिनों का ग्रेस पीरियड उपलब्ध है।",
+                    text = "• कम पढ़े-लिखे कामगार और नए सदस्य पहले दिन से ही बिना किसी रुकावट के काम शुरू कर सकते हैं।\n• कागजी वेरिफिकेशन पूरा करने के लिए 15 दिनों की छूट मिलती है।\n• लगातार ईमानदारी से काम करने पर '5-Star Verified Worker' का दर्जा दिया जाता है।",
                     fontSize = 13.sp
                 )
             },
@@ -524,40 +632,73 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
         )
     }
 
+    if (showAdDialog) {
+        AlertDialog(
+            onDismissRequest = { showAdDialog = false },
+            title = { Text(text = "🎬 प्रायोजित विज्ञापन", fontSize = 16.sp, fontWeight = FontWeight.Bold) },
+            text = {
+                Text(
+                    text = "विज्ञापन देखने के लिए धन्यवाद!\n₹0.50 आपके ऐप वॉलेट में जोड़ दिए गए हैं।",
+                    fontSize = 13.sp
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showAdDialog = false }) {
+                    Text(text = "ठीक है")
+                }
+            }
+        )
+    }
+
+    if (showInsuranceDialog) {
+        AlertDialog(
+            onDismissRequest = { showInsuranceDialog = false },
+            title = { Text(text = "🛡️ LokSetu दुर्घटना बीमा पॉलिसी", fontSize = 16.sp, fontWeight = FontWeight.Bold) },
+            text = {
+                Text(
+                    text = "• 🌌 नाइट / हाईवे राइडर्स कवर: रात के समय व हाईवे राइडर/ड्राइवर के लिए दुर्घटना में मृत्यु या पूर्ण विकलांगता पर ₹50 लाख का बीमा कवर।\n• ☀️ डे-टाइम कामगार कवर: दिन के कामकाजी घंटों के दौरान ₹25 लाख का एक्सीडेंटल डेथ/सुरक्षा कवर।\n• 🚑 24x7 इमरजेंसी रोड-साइड व कानूनी सहायता।",
+                    fontSize = 13.sp
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showInsuranceDialog = false }) {
+                    Text(text = "ठीक है")
+                }
+            }
+        )
+    }
+
     if (isSosDialogOpen) {
         SosEmergencyDialog(
+            viewModel = viewModel,
             onDismiss = { viewModel.closeSosDialog() }
         )
     }
 
     if (isLocationPickerOpen) {
         GpsMapPickerDialog(
-            initialLat = 0.0,
-            initialLng = 0.0,
-            accuracyMeters = 0.0f,
-            isDetecting = isDetectingLocation,
-            onDetectGps = { viewModel.detectGpsLocation(context) },
-            onLocationConfirmed = { lat, lng, address ->
-                viewModel.detectGpsLocation(context)
-            },
+            viewModel = viewModel,
             onDismiss = { viewModel.closeLocationPicker() }
         )
     }
 
     if (isTermsSheetOpen) {
         TermsAndLegalSheet(
+            viewModel = viewModel,
             onDismiss = { viewModel.closeTermsSheet() }
         )
     }
 
     if (isHomeVisitSafetyOpen) {
         HomeVisitSafetySheet(
+            viewModel = viewModel,
             onDismiss = { viewModel.closeHomeVisitSafety() }
         )
     }
 
     if (isCustomerRatingOpen) {
         CustomerRatingDialog(
+            viewModel = viewModel,
             onDismiss = { viewModel.closeCustomerRating() }
         )
     }
