@@ -74,7 +74,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
     DisposableEffect(context) {
         val textToSpeech = TextToSpeech(context) { status ->
             if (status == TextToSpeech.SUCCESS) {
-                // TTS Success
+                // TTS success
             }
         }
         textToSpeech.language = Locale("hi", "IN")
@@ -519,9 +519,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 4.dp)
-                                .clickable {
-                                    showAdDialog = true
-                                },
+                                .clickable { showAdDialog = true },
                             shape = RoundedCornerShape(12.dp),
                             colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0))
                         ) {
@@ -545,37 +543,44 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                     item {
                         CategorySelectorRow(
                             selectedCategory = selectedCategory,
-                            onSelectCategory = { viewModel.setSelectedCategory(it) }
+                            onSelectCategory = { viewModel.selectCategory(it) }
                         )
                     }
 
                     item {
                         FilterOptionsRow(
-                            searchQuery = searchQuery,
-                            onSearchQueryChange = { viewModel.setSearchQuery(it) },
+                            query = searchQuery,
+                            onQueryChange = { viewModel.setSearchQuery(it) },
                             availableOnly = filterAvailableOnly,
-                            onToggleAvailable = { viewModel.toggleFilterAvailable() },
+                            onToggleAvailable = { viewModel.toggleAvailableOnly() },
                             verifiedOnly = filterVerifiedOnly,
-                            onToggleVerified = { viewModel.toggleFilterVerified() },
+                            onToggleVerified = { viewModel.toggleVerifiedOnly() },
                             sortByDistance = sortByDistance,
                             onToggleSortDistance = { viewModel.toggleSortByDistance() },
                             radiusKm = radiusKm,
-                            onRadiusChange = { viewModel.setRadiusFilterKm(it) }
+                            onSetRadius = { viewModel.setRadiusKm(it) }
                         )
                     }
 
-                    items(providers) { provider ->
+                    items(providers) { providerWithDist ->
                         ProviderCard(
-                            provider = provider,
-                            distanceKm = 0.0,
-                            onClick = { viewModel.openDetail(provider) },
-                            onCallClick = { viewModel.initiateCall(context, provider) },
-                            onWhatsAppClick = { viewModel.openWhatsApp(provider) },
-                            onDetailClick = { viewModel.openDetail(provider) },
-                            onEscrowClick = { viewModel.openServiceEscrow(provider) },
+                            provider = providerWithDist.provider,
+                            distanceKm = providerWithDist.distanceKm,
+                            onClick = { viewModel.openDetail(providerWithDist.provider) },
+                            onCallClick = {
+                                val intent = Intent(Intent.ACTION_DIAL).apply {
+                                    data = Uri.parse("tel:${providerWithDist.provider.phone}")
+                                }
+                                context.startActivity(intent)
+                            },
+                            onWhatsAppClick = {
+                                val intent = Intent(Intent.ACTION_VIEW).apply {
+                                    data = Uri.parse("https://api.whatsapp.com/send?phone=${providerWithDist.provider.phone}")
+                                }
+                                context.startActivity(intent)
+                            },
                             onDirectionsClick = { },
-                            onFavoriteClick = { },
-                            onHomeVisitSafetyClick = { viewModel.openHomeVisitSafety() }
+                            onFavoriteClick = { }
                         )
                     }
                 }
@@ -653,39 +658,35 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
 
     if (isSosDialogOpen) {
         SosEmergencyDialog(
-            onDismiss = { viewModel.closeSosDialog() },
-            onTriggerSos = { viewModel.triggerSosAlert(context) }
+            viewModel = viewModel,
+            onDismiss = { viewModel.closeSosDialog() }
         )
     }
 
     if (isLocationPickerOpen) {
         GpsMapPickerDialog(
-            initialLat = 0.0,
-            initialLng = 0.0,
-            accuracyMeters = 0.0f,
-            isDetecting = isDetectingLocation,
-            onDetectGps = { viewModel.detectGpsLocation(context) },
-            onLocationConfirmed = { lat, lng, address -> 
-                viewModel.detectGpsLocation(context)
-            },
+            viewModel = viewModel,
             onDismiss = { viewModel.closeLocationPicker() }
         )
     }
 
     if (isTermsSheetOpen) {
         TermsAndLegalSheet(
+            viewModel = viewModel,
             onDismiss = { viewModel.closeTermsSheet() }
         )
     }
 
     if (isHomeVisitSafetyOpen) {
         HomeVisitSafetySheet(
+            viewModel = viewModel,
             onDismiss = { viewModel.closeHomeVisitSafety() }
         )
     }
 
     if (isCustomerRatingOpen) {
         CustomerRatingDialog(
+            viewModel = viewModel,
             onDismiss = { viewModel.closeCustomerRating() }
         )
     }
@@ -701,13 +702,13 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
         WhatsAppMessageDialog(
             provider = selectedWhatsApp!!,
             userLocationAddress = userLocation.toString(),
-            onDismiss = { viewModel.openWhatsApp(null) },
+            onDismiss = { viewModel.setSelectedProviderForWhatsApp(null) },
             onSendMessage = { message ->
                 val intent = Intent(Intent.ACTION_VIEW).apply {
                     data = Uri.parse("https://api.whatsapp.com/send?phone=${selectedWhatsApp!!.phone}&text=${Uri.encode(message)}")
                 }
                 context.startActivity(intent)
-                viewModel.openWhatsApp(null)
+                viewModel.setSelectedProviderForWhatsApp(null)
             }
         )
     }
