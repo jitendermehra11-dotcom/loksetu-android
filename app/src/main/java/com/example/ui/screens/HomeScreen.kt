@@ -35,7 +35,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.util.Locale
 
-// R फ़ाइल का सही पैकेज इंपोर्ट
 import com.aistudio.loksetu.vxqtmp.R
 import com.example.location.LocationHelper
 import com.example.ui.components.*
@@ -63,13 +62,9 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
     val sortByDistance by viewModel.sortByDistance.collectAsStateWithLifecycle()
     val radiusKm by viewModel.radiusFilterKm.collectAsStateWithLifecycle()
     val providers by viewModel.filteredProviders.collectAsStateWithLifecycle()
-    val contactHistory by viewModel.contactHistory.collectAsStateWithLifecycle()
 
-    val selectedDetail by viewModel.selectedProviderForDetail.collectAsStateWithLifecycle()
     val selectedWhatsApp by viewModel.selectedProviderForWhatsApp.collectAsStateWithLifecycle()
     val isLocationPickerOpen by viewModel.isLocationPickerOpen.collectAsStateWithLifecycle()
-    val isAddProviderOpen by viewModel.isAddProviderOpen.collectAsStateWithLifecycle()
-    val isHistoryOpen by viewModel.isHistoryOpen.collectAsStateWithLifecycle()
     val currentLanguage by viewModel.currentLanguage.collectAsStateWithLifecycle()
     val isTermsSheetOpen by viewModel.isTermsSheetOpen.collectAsStateWithLifecycle()
     val isServiceEscrowOpen by viewModel.isServiceEscrowOpen.collectAsStateWithLifecycle()
@@ -78,13 +73,11 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
     val isCustomerRatingOpen by viewModel.isCustomerRatingOpen.collectAsStateWithLifecycle()
     val isHindi = currentLanguage == AppLanguage.HINDI
 
-    // नए फीचर्स के स्टेट्स
     var showAdDialog by remember { mutableStateOf(false) }
     var showInsuranceDialog by remember { mutableStateOf(false) }
     var showVerificationDialog by remember { mutableStateOf(false) }
     var adIncome by remember { mutableStateOf(12.50) }
 
-    // वॉइस हेल्प गाइड (TextToSpeech)
     var tts by remember { mutableStateOf<TextToSpeech?>(null) }
     DisposableEffect(context) {
         val textToSpeech = TextToSpeech(context) { status ->
@@ -104,7 +97,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
         tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
     }
 
-    // Permission launcher for Location & Call Phone
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { perms ->
@@ -115,7 +107,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
         }
     }
 
-    // Startup Location Check
     LaunchedEffect(Unit) {
         if (LocationHelper.hasLocationPermission(context)) {
             viewModel.detectGpsLocation(context)
@@ -130,7 +121,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
         }
     }
 
-    // Snackbar Notices
     LaunchedEffect(Unit) {
         viewModel.userNoticeEvent.collect { notice ->
             snackbarHostState.showSnackbar(notice)
@@ -154,14 +144,14 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         Column {
                             Text(
                                 text = "LokSetu",
-                                style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = MaterialTheme.colorScheme.primary
+                                color = MaterialTheme.colorScheme.primary,
+                                fontSize = 18.sp
                             )
                             Text(
                                 text = if (isHindi) "किसान, कामगार व मोबिलिटी नेटवर्क" else "Direct Farmer, Worker & Cargo Network",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 11.sp
                             )
                         }
                     }
@@ -174,8 +164,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
                         colors = ButtonDefaults.outlinedButtonColors(
                             containerColor = if (isHindi) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else Color.Transparent
-                        ),
-                        modifier = Modifier.testTag("top_language_toggle_button")
+                        )
                     ) {
                         Icon(
                             imageVector = Icons.Default.Translate,
@@ -187,16 +176,14 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         Text(
                             text = if (isHindi) "हिंदी" else "EN",
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 11.sp
                         )
                     }
 
                     Spacer(modifier = Modifier.width(2.dp))
 
-                    IconButton(
-                        onClick = { viewModel.openTermsSheet() },
-                        modifier = Modifier.testTag("top_open_terms_button")
-                    ) {
+                    IconButton(onClick = { viewModel.openTermsSheet() }) {
                         Icon(
                             imageVector = Icons.Default.Gavel,
                             contentDescription = "Terms & Legal Guidelines",
@@ -204,10 +191,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         )
                     }
 
-                    IconButton(
-                        onClick = { viewModel.openCustomerRating() },
-                        modifier = Modifier.testTag("top_open_rating_button")
-                    ) {
+                    IconButton(onClick = { viewModel.openCustomerRating() }) {
                         Icon(
                             imageVector = Icons.Default.Shield,
                             contentDescription = "Customer Rating & Protection",
@@ -222,8 +206,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                             contentColor = Color(0xFFD32F2F)
                         ),
                         shape = RoundedCornerShape(16.dp),
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
-                        modifier = Modifier.testTag("top_emergency_sos_button")
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Emergency,
@@ -235,16 +218,14 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         Text(
                             text = "SOS",
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFD32F2F)
+                            color = Color(0xFFD32F2F),
+                            fontSize = 12.sp
                         )
                     }
 
                     Spacer(modifier = Modifier.width(4.dp))
 
-                    IconButton(
-                        onClick = { viewModel.openHistory() },
-                        modifier = Modifier.testTag("open_history_button")
-                    ) {
+                    IconButton(onClick = { viewModel.openHistory() }) {
                         Icon(
                             imageVector = Icons.Default.History,
                             contentDescription = "Contact History",
@@ -252,10 +233,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         )
                     }
 
-                    IconButton(
-                        onClick = { viewModel.openLocationPicker() },
-                        modifier = Modifier.testTag("top_open_map_picker_button")
-                    ) {
+                    IconButton(onClick = { viewModel.openLocationPicker() }) {
                         Icon(
                             imageVector = Icons.Default.Map,
                             contentDescription = "GPS Location Picker",
@@ -277,37 +255,37 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                     selected = currentSection == AppSection.PROVIDERS,
                     onClick = { viewModel.setSection(AppSection.PROVIDERS) },
                     icon = { Icon(Icons.Default.Storefront, contentDescription = "Directory") },
-                    label = { Text("Directory", style = MaterialTheme.typography.labelSmall) }
+                    label = { Text("Directory", fontSize = 10.sp) }
                 )
                 NavigationBarItem(
                     selected = currentSection == AppSection.STORE_DELIVERY,
                     onClick = { viewModel.setSection(AppSection.STORE_DELIVERY) },
                     icon = { Icon(Icons.Default.LocalShipping, contentDescription = "Store Delivery") },
-                    label = { Text("Delivery", style = MaterialTheme.typography.labelSmall) }
+                    label = { Text("Delivery", fontSize = 10.sp) }
                 )
                 NavigationBarItem(
                     selected = currentSection == AppSection.JOBS,
                     onClick = { viewModel.setSection(AppSection.JOBS) },
                     icon = { Icon(Icons.Default.BusinessCenter, contentDescription = "Jobs") },
-                    label = { Text("Jobs", style = MaterialTheme.typography.labelSmall) }
+                    label = { Text("Jobs", fontSize = 10.sp) }
                 )
                 NavigationBarItem(
                     selected = currentSection == AppSection.DIRECT_DEALS,
                     onClick = { viewModel.setSection(AppSection.DIRECT_DEALS) },
                     icon = { Icon(Icons.Default.Handshake, contentDescription = "Farm Deals") },
-                    label = { Text("Deals", style = MaterialTheme.typography.labelSmall) }
+                    label = { Text("Deals", fontSize = 10.sp) }
                 )
                 NavigationBarItem(
                     selected = currentSection == AppSection.WELFARE_FUND,
                     onClick = { viewModel.setSection(AppSection.WELFARE_FUND) },
                     icon = { Icon(Icons.Default.Shield, contentDescription = "Driver Welfare") },
-                    label = { Text("Welfare", style = MaterialTheme.typography.labelSmall) }
+                    label = { Text("Welfare", fontSize = 10.sp) }
                 )
                 NavigationBarItem(
                     selected = currentSection == AppSection.SETTLEMENT,
                     onClick = { viewModel.setSection(AppSection.SETTLEMENT) },
                     icon = { Icon(Icons.Default.Payments, contentDescription = "Settlement") },
-                    label = { Text("Settlement", style = MaterialTheme.typography.labelSmall) }
+                    label = { Text("Settlement", fontSize = 10.sp) }
                 )
             }
         },
@@ -319,8 +297,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                     text = { Text("Register Service", fontWeight = FontWeight.SemiBold) },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
-                    shape = RoundedCornerShape(24.dp),
-                    modifier = Modifier.testTag("fab_register_provider")
+                    shape = RoundedCornerShape(24.dp)
                 )
             }
         }
@@ -333,14 +310,13 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         .padding(innerPadding),
                     contentPadding = PaddingValues(bottom = 84.dp)
                 ) {
-                    // 1. GPS Location Status Bar
+                    // 1. Location Bar
                     item {
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 6.dp)
-                                .clickable { viewModel.openLocationPicker() }
-                                .testTag("location_status_bar"),
+                                .clickable { viewModel.openLocationPicker() },
                             colors = CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                             )
@@ -361,15 +337,15 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = if (userLocation.isNotBlank()) userLocation else if (isHindi) "स्थान खोजा जा रहा है..." else "Detecting location...",
-                                        style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.SemiBold,
+                                        fontSize = 13.sp,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
                                     Text(
                                         text = if (isHindi) "GPS मैप से अपना सटीक क्षेत्र चुनें" else "Tap to change radius or custom location",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 11.sp
                                     )
                                 }
                                 if (isDetectingLocation) {
@@ -389,7 +365,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         }
                     }
 
-                    // 2. वॉइस हेल्प कार्ड
+                    // 2. Voice Assistance Card
                     item {
                         Card(
                             modifier = Modifier
@@ -405,25 +381,25 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                                 modifier = Modifier.padding(12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(text = "🔊 ", style = MaterialTheme.typography.titleLarge)
+                                Text(text = "🔊 ", fontSize = 20.sp)
                                 Column {
                                     Text(
                                         text = "आवाज़ में सुनें (Voice Assistance)",
-                                        style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.Bold,
-                                        color = Color(0xFFF57F17)
+                                        color = Color(0xFFF57F17),
+                                        fontSize = 13.sp
                                     )
                                     Text(
                                         text = "ऐप की जानकारी हिंदी में सुनने के लिए यहाँ दबाएँ",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = Color(0xFF424242)
+                                        color = Color(0xFF424242),
+                                        fontSize = 11.sp
                                     )
                                 }
                             }
                         }
                     }
 
-                    // 3. प्रोग्रेसिव ट्रस्ट मॉडल (15 दिन ग्रेस)
+                    // 3. Progressive Grace Period Card
                     item {
                         Card(
                             modifier = Modifier
@@ -441,9 +417,9 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                                 ) {
                                     Text(
                                         text = "🔰 प्रोफाइल स्टेटस: प्रोविशनल (15 दिन वर्किंग ग्रेस)",
-                                        style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF512DA8)
+                                        color = Color(0xFF512DA8),
+                                        fontSize = 12.sp
                                     )
                                     Surface(
                                         shape = RoundedCornerShape(8.dp),
@@ -453,21 +429,21 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                                             text = "15 दिन शेष",
                                             color = Color.White,
                                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                            style = MaterialTheme.typography.labelSmall
+                                            fontSize = 10.sp
                                         )
                                     }
                                 }
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     text = "पहले ही दिन से काम शुरू करें। कागजी कार्रवाई के लिए 15 दिन का समय है। विवरण देखें ➔",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color(0xFF424242)
+                                    color = Color(0xFF424242),
+                                    fontSize = 11.sp
                                 )
                             }
                         }
                     }
 
-                    // 4. बायर व ग्राहक डायरेक्ट कनेक्टिविटी
+                    // 4. Buyer Direct Call & WhatsApp Card
                     item {
                         Card(
                             modifier = Modifier
@@ -479,15 +455,15 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                             Column(modifier = Modifier.padding(12.dp)) {
                                 Text(
                                     text = "📞 बायर / ग्राहक से सीधे संपर्क करें",
-                                    style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF1565C0)
+                                    color = Color(0xFF1565C0),
+                                    fontSize = 13.sp
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = "बिना किसी ठेकेदार के सीधी बात और 100% दैनिक भुगतान",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color(0xFF616161)
+                                    color = Color(0xFF616161),
+                                    fontSize = 11.sp
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Row(
@@ -504,7 +480,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5)),
                                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                                     ) {
-                                        Text("📞 डायरेक्ट कॉल", style = MaterialTheme.typography.labelMedium)
+                                        Text("📞 डायरेक्ट कॉल", fontSize = 12.sp)
                                     }
 
                                     Button(
@@ -517,14 +493,14 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF43A047)),
                                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                                     ) {
-                                        Text("💬 WhatsApp", style = MaterialTheme.typography.labelMedium)
+                                        Text("💬 WhatsApp", fontSize = 12.sp)
                                     }
                                 }
                             }
                         }
                     }
 
-                    // 5. दुर्घटना सुरक्षा बीमा
+                    // 5. Insurance Card
                     item {
                         Card(
                             modifier = Modifier
@@ -537,21 +513,21 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                             Column(modifier = Modifier.padding(12.dp)) {
                                 Text(
                                     text = "🛡️ LokSetu दुर्घटना बीमा (₹25 लाख - ₹50 लाख)",
-                                    style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF2E7D32)
+                                    color = Color(0xFF2E7D32),
+                                    fontSize = 13.sp
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = "नाइट/हाईवे राइडर्स हेतु ₹50 लाख व डे-टाइम हेतु ₹25 लाख एक्सीडेंटल कवर। विवरण देखें ➔",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color(0xFF424242)
+                                    color = Color(0xFF424242),
+                                    fontSize = 11.sp
                                 )
                             }
                         }
                     }
 
-                    // 6. स्पॉन्सर्ड विज्ञापन
+                    // 6. Sponsored Ad Card (Clean Text)
                     item {
                         Card(
                             modifier = Modifier
@@ -567,32 +543,41 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                             Column(modifier = Modifier.padding(12.dp)) {
                                 Text(
                                     text = "📢 प्रायोजित विज्ञापन (Ad Section)",
-                                    style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFFE65100)
+                                    color = Color(0xFFE65100),
+                                    fontSize = 13.sp
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
-                                    text = "विज्ञापन देखें और वॉलेट बैलेंस बढ़ाएं। कुल ऐड बोनस: ₹" + String.format("%.2f", adIncome),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color(0xFF424242)
+                                    text = "विज्ञापन देखें और वॉलेट बैलेंस बढ़ाएं। कुल ऐड बोनस: ₹12.50",
+                                    color = Color(0xFF424242),
+                                    fontSize = 11.sp
                                 )
                             }
                         }
                     }
 
-                    // 7. Category Selector Row (Correct Parameter Signature)
+                    // 7. Category Selector
                     item {
                         CategorySelectorRow(
                             selectedCategory = selectedCategory,
-                            onSelectCategory = { viewModel.selectCategory(it) }
+                            onCategorySelected = { viewModel.selectCategory(it) }
                         )
                     }
 
-                    // 8. Filter Options Row (Correct Parameter Signature)
+                    // 8. Filter Options Row
                     item {
                         FilterOptionsRow(
-                            viewModel = viewModel
+                            searchQuery = searchQuery,
+                            onSearchQueryChange = { viewModel.setSearchQuery(it) },
+                            filterAvailableOnly = filterAvailableOnly,
+                            onToggleAvailable = { viewModel.toggleFilterAvailable() },
+                            filterVerifiedOnly = filterVerifiedOnly,
+                            onToggleVerified = { viewModel.toggleFilterVerified() },
+                            sortByDistance = sortByDistance,
+                            onToggleSortByDistance = { viewModel.toggleSortByDistance() },
+                            radiusKm = radiusKm,
+                            onRadiusChange = { viewModel.setRadiusFilterKm(it) }
                         )
                     }
 
@@ -618,26 +603,26 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                 ) {
                     Text(
                         text = "LokSetu ${currentSection.name} Module Active",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
+                        fontSize = 16.sp
                     )
                 }
             }
         }
     }
 
-    // --- DIALOGS (Correct Parameter Signatures) ---
+    // --- POPUP DIALOGS ---
 
     if (showVerificationDialog) {
         AlertDialog(
             onDismissRequest = { showVerificationDialog = false },
-            title = { Text("🔰 15-दिन वर्किंग ग्रेस मॉडल", style = MaterialTheme.typography.titleMedium) },
+            title = { Text("🔰 15-दिन वर्किंग ग्रेस मॉडल", fontSize = 16.sp, fontWeight = FontWeight.Bold) },
             text = {
                 Text(
                     "• कम पढ़े-लिखे कामगार और नए सदस्य पहले दिन से ही बिना किसी रुकावट के काम शुरू कर सकते हैं।\n" +
                     "• कागजी वेरिफिकेशन पूरा करने के लिए 15 दिनों की छूट मिलती है।\n" +
                     "• लगातार ईमानदारी से काम करने पर '5-Star Verified Worker' का दर्जा दिया जाता है।",
-                    style = MaterialTheme.typography.bodyMedium
+                    fontSize = 13.sp
                 )
             },
             confirmButton = {
@@ -651,11 +636,11 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
     if (showAdDialog) {
         AlertDialog(
             onDismissRequest = { showAdDialog = false },
-            title = { Text("🎬 प्रायोजित विज्ञापन", style = MaterialTheme.typography.titleMedium) },
+            title = { Text("🎬 प्रायोजित विज्ञापन", fontSize = 16.sp, fontWeight = FontWeight.Bold) },
             text = {
                 Text(
                     "विज्ञापन देखने के लिए धन्यवाद!\n₹0.50 आपके ऐप वॉलेट में जोड़ दिए गए हैं।",
-                    style = MaterialTheme.typography.bodyMedium
+                    fontSize = 13.sp
                 )
             },
             confirmButton = {
@@ -669,13 +654,13 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
     if (showInsuranceDialog) {
         AlertDialog(
             onDismissRequest = { showInsuranceDialog = false },
-            title = { Text("🛡️ LokSetu दुर्घटना बीमा पॉलिसी", style = MaterialTheme.typography.titleMedium) },
+            title = { Text("🛡️ LokSetu दुर्घटना बीमा पॉलिसी", fontSize = 16.sp, fontWeight = FontWeight.Bold) },
             text = {
                 Text(
                     "• 🌌 नाइट / हाईवे राइडर्स कवर: रात के समय व हाईवे राइडर/ड्राइवर के लिए दुर्घटना में मृत्यु या पूर्ण विकलांगता पर ₹50 लाख का बीमा कवर।\n" +
                     "• ☀️ डे-टाइम कामगार कवर: दिन के कामकाजी घंटों के दौरान ₹25 लाख का एक्सीडेंटल डेथ/सुरक्षा कवर।\n" +
                     "• 🚑 24x7 इमरजेंसी रोड-साइड व कानूनी सहायता।",
-                    style = MaterialTheme.typography.bodyMedium
+                    fontSize = 13.sp
                 )
             },
             confirmButton = {
@@ -696,8 +681,9 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
     if (isLocationPickerOpen) {
         GpsMapPickerDialog(
             onDismiss = { viewModel.closeLocationPicker() },
-            onDetectGps = { viewModel.detectGpsLocation(context) },
-            onLocationConfirmed = { loc -> viewModel.setCustomLocation(loc, 0.0, 0.0) }
+            onLocationSelected = { locationName, lat, lng ->
+                viewModel.setCustomLocation(locationName, lat, lng)
+            }
         )
     }
 
@@ -709,42 +695,43 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
 
     if (isServiceEscrowOpen && selectedProviderForEscrow != null) {
         ServiceEscrowDialog(
-            viewModel = viewModel,
-            onDismiss = { viewModel.closeServiceEscrow() }
+            provider = selectedProviderForEscrow!!,
+            onDismiss = { viewModel.closeServiceEscrow() },
+            onConfirmEscrow = { amount -> viewModel.confirmEscrowDeposit(context, selectedProviderForEscrow!!, amount) }
         )
     }
 
     if (isHomeVisitSafetyOpen) {
         HomeVisitSafetySheet(
-            viewModel = viewModel,
             onDismiss = { viewModel.closeHomeVisitSafety() }
         )
     }
 
     if (isCustomerRatingOpen) {
         CustomerRatingDialog(
-            viewModel = viewModel,
-            onDismiss = { viewModel.closeCustomerRating() }
+            onDismiss = { viewModel.closeCustomerRating() },
+            onSubmitRating = { providerId, rating, review ->
+                viewModel.submitCustomerRating(providerId, rating, review)
+            }
         )
     }
 
     if (isCustomSettlementOpen && selectedProviderForSettlement != null) {
         PaymentSettlementDialog(
-            viewModel = viewModel,
-            onDismiss = { viewModel.closeCustomSettlement() }
+            provider = selectedProviderForSettlement!!,
+            onDismiss = { viewModel.closeCustomSettlement() },
+            onSettlePayment = { amount, upiId ->
+                viewModel.processDirectUpiSettlement(context, selectedProviderForSettlement!!, amount, upiId)
+            }
         )
     }
 
     if (selectedWhatsApp != null) {
         WhatsAppMessageDialog(
-            userLocationAddress = userLocation,
+            provider = selectedWhatsApp!!,
             onDismiss = { viewModel.closeWhatsApp() },
-            onSendMessage = { msg ->
-                val intent = Intent(Intent.ACTION_VIEW).apply {
-                    data = Uri.parse("https://api.whatsapp.com/send?phone=${selectedWhatsApp!!.phone}&text=${Uri.encode(msg)}")
-                }
-                context.startActivity(intent)
-                viewModel.closeWhatsApp()
+            onSendMessage = { message ->
+                viewModel.sendWhatsAppMessage(context, selectedWhatsApp!!, message)
             }
         )
     }
