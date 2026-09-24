@@ -547,18 +547,21 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
 
     if (isTermsSheetOpen) {
         TermsAndLegalSheet(
+            viewModel = viewModel,
             onDismiss = { viewModel.closeTermsSheet() }
         )
     }
 
     if (isHomeVisitSafetyOpen) {
         HomeVisitSafetySheet(
+            viewModel = viewModel,
             onDismiss = { viewModel.closeHomeVisitSafety() }
         )
     }
 
     if (isCustomerRatingOpen) {
         CustomerRatingDialog(
+            viewModel = viewModel,
             onDismiss = { viewModel.closeCustomerRating() }
         )
     }
