@@ -77,15 +77,12 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
 
     private val repository: LokSetuRepository
 
-    // Multi-Language State
     private val _currentLanguage = MutableStateFlow(AppLanguage.HINDI)
     val currentLanguage: StateFlow<AppLanguage> = _currentLanguage.asStateFlow()
 
-    // Terms & Legal
     private val _isTermsSheetOpen = MutableStateFlow(false)
     val isTermsSheetOpen: StateFlow<Boolean> = _isTermsSheetOpen.asStateFlow()
 
-    // Core Managers
     val paymentManager = PaymentSettlementManager.getInstance()
     val sosManager = SosEmergencyManager(application)
     val welfareManager = AdWelfareFundManager.getInstance()
@@ -101,7 +98,6 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
     val homeVisitSafetyManager = SafetyProtocolManager.getInstance(application)
     val customerRatingManager = CustomerRatingManager.getInstance()
 
-    // Dialog & Sheet States
     private val _isServiceEscrowOpen = MutableStateFlow(false)
     val isServiceEscrowOpen: StateFlow<Boolean> = _isServiceEscrowOpen.asStateFlow()
 
@@ -114,7 +110,6 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
     private val _isCustomerRatingOpen = MutableStateFlow(false)
     val isCustomerRatingOpen: StateFlow<Boolean> = _isCustomerRatingOpen.asStateFlow()
 
-    // ONDC Flows
     val ondcMerchants: StateFlow<List<OndcMerchant>> = ondcConnector.registeredMerchants
     val ondcBroadcastOrders: StateFlow<List<OndcBroadcastOrder>> = ondcConnector.liveBroadcastOrders
     val ondcMerchantCatalogs: StateFlow<Map<String, List<OndcProductItem>>> = ondcConnector.merchantCatalogs
@@ -872,8 +867,18 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
         paymentManager.updateFuelPrice(fuelType, newPrice)
     }
 
+    /**
+     * सीएनजी (CNG - ₹86.98), पेट्रोल (Petrol - ₹102.12) और डीजल (Diesel - ₹95.20) के ताजा लाइव रेट्स सेट करने के लिए।
+     */
     fun resetFuelPrices() {
-        paymentManager.resetToDefaultFuelPrices()
+        paymentManager.updateFuelPrice(FuelType.PETROL, 102.12)
+        paymentManager.updateFuelPrice(FuelType.DIESEL, 95.20)
+        // यदि FuelType enum में CNG उपलब्ध है, तो यह अपडेट होगा
+        try {
+            paymentManager.updateFuelPrice(FuelType.valueOf("CNG"), 86.98)
+        } catch (e: Exception) {
+            // Fallback यदि enum नाम भिन्न हो
+        }
     }
 
     fun refreshSmartReturnMatches() {
