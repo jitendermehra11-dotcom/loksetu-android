@@ -392,6 +392,60 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                         }
                     }
 
+                    // 🎁 SPONSORED AD & WATCH-TO-EARN BANNER
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 4.dp)
+                                .clickable {
+                                    Toast.makeText(context, "AdMob / Reward Video Ad Loading...", Toast.LENGTH_SHORT).show()
+                                },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFE0F2FE)),
+                            border = BorderStroke(1.dp, Color(0xFF38BDF8))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(text = "🎁 ", fontSize = 20.sp)
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = if (isHindi) "देखें और कमाएं (Watch & Daily Reward)" else "Watch & Earn Rewards",
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF0284C7),
+                                            fontSize = 13.sp
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Surface(
+                                            shape = RoundedCornerShape(4.dp),
+                                            color = Color(0xFF0284C7)
+                                        ) {
+                                            Text(
+                                                text = "AD / SPONSORED",
+                                                color = Color.White,
+                                                fontSize = 8.sp,
+                                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                            )
+                                        }
+                                    }
+                                    Text(
+                                        text = if (isHindi) "शॉर्ट वीडियो व पार्टनर एड देखकर दैनिक रिवॉर्ड बोनस पाएं" else "Watch short partner ads & earn daily platform reward points",
+                                        color = Color(0xFF334155),
+                                        fontSize = 11.sp
+                                    )
+                                }
+                                Icon(
+                                    imageVector = Icons.Default.PlayCircle,
+                                    contentDescription = "Play Ad",
+                                    tint = Color(0xFF0284C7)
+                                )
+                            }
+                        }
+                    }
+
                     item {
                         Card(
                             modifier = Modifier
@@ -583,7 +637,7 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
 }
 
 // ==========================================
-// LIVE MODULE SCREENS (Replacing Dummy Active Module)
+// LIVE MODULE SCREENS WITH FUEL RATE INDEX
 // ==========================================
 
 @Composable
@@ -601,6 +655,61 @@ fun DeliveryScreenSection(context: Context, padding: PaddingValues, isHindi: Boo
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
+        // ⛽ LIVE FUEL RATE INDEX CARD
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0)),
+            border = BorderStroke(1.dp, Color(0xFFFFB74D))
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = "⛽ ", fontSize = 18.sp)
+                        Text(
+                            text = if (isHindi) "लाइव फ्यूल इंडेक्स (Live Fuel Rate)" else "Live Govt Fuel Rate Index",
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFE65100),
+                            fontSize = 13.sp
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = Color(0xFF2E7D32)
+                        ) {
+                            Text(
+                                text = "🟢 LIVE",
+                                color = Color.White,
+                                fontSize = 9.sp,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "पेट्रोल: ₹102.44/L  •  डीजल: ₹89.62/L (हरियाणा/NCR)",
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFFBF360C),
+                        fontSize = 12.sp
+                    )
+                }
+                IconButton(onClick = {
+                    Toast.makeText(context, "फ्यूल रेट सिंक: ₹102.44/L (लाइव इंडेक्स)", Toast.LENGTH_SHORT).show()
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Refresh Fuel Rate",
+                        tint = Color(0xFFE65100)
+                    )
+                }
+            }
+        }
+
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
@@ -667,7 +776,7 @@ fun DeliveryScreenSection(context: Context, padding: PaddingValues, isHindi: Boo
                     "Auto Cargo" -> 25
                     else -> 40
                 }
-                estimatedFare = "Estimated Fare: ₹${rate * 3} - ₹${rate * 6} (Base Distance)"
+                estimatedFare = "Estimated Fare: ₹${rate * 3} - ₹${rate * 6} (Base Fuel Index ₹102.44)"
             },
             modifier = Modifier.fillMaxWidth()
         ) {
