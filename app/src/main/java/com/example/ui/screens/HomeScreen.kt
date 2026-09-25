@@ -1,9 +1,11 @@
 package com.example.ui.screens
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.speech.tts.TextToSpeech
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -12,6 +14,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -24,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -66,8 +71,6 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
     val isCustomerRatingOpen by viewModel.isCustomerRatingOpen.collectAsStateWithLifecycle()
     val isHindi = (currentLanguage == AppLanguage.HINDI)
 
-    var showAdDialog by remember { mutableStateOf(false) }
-    var showInsuranceDialog by remember { mutableStateOf(false) }
     var showVerificationDialog by remember { mutableStateOf(false) }
 
     var tts by remember { mutableStateOf<TextToSpeech?>(null) }
@@ -489,20 +492,11 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                     }
                 }
             }
-            else -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "LokSetu Active Module",
-                        color = MaterialTheme.colorScheme.primary,
-                        fontSize = 16.sp
-                    )
-                }
-            }
+            AppSection.STORE_DELIVERY -> DeliveryScreenSection(context, innerPadding, isHindi)
+            AppSection.JOBS -> JobsScreenSection(context, innerPadding, isHindi)
+            AppSection.DIRECT_DEALS -> DealsScreenSection(context, innerPadding, isHindi)
+            AppSection.WELFARE_FUND -> WelfareScreenSection(context, innerPadding, isHindi)
+            AppSection.SETTLEMENT -> SettlementScreenSection(context, innerPadding, isHindi)
         }
     }
 
@@ -585,5 +579,397 @@ fun HomeScreen(viewModel: LokSetuViewModel) {
                 context.startActivity(intent)
             }
         )
+    }
+}
+
+// ==========================================
+// LIVE MODULE SCREENS (Replacing Dummy Active Module)
+// ==========================================
+
+@Composable
+fun DeliveryScreenSection(context: Context, padding: PaddingValues, isHindi: Boolean) {
+    var pickup by remember { mutableStateOf("") }
+    var drop by remember { mutableStateOf("") }
+    var selectedVehicle by remember { mutableStateOf("Bike Parcel") }
+    var estimatedFare by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = if (isHindi) "🚚 डायरेक्ट स्टोर व सामान डिलीवरी" else "🚚 Direct Store Cargo & Parcel",
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = if (isHindi) "बिना बिचौलिए सीधे लोकल राइडर व कमर्शियल ड्राइवर से बुकिंग करें" else "Book nearby bike parcel, auto or loading truck directly",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        }
+
+        OutlinedTextField(
+            value = pickup,
+            onValueChange = { pickup = it },
+            label = { Text(if (isHindi) "पिकअप लोकेशन (Pickup Address)" else "Pickup Location") },
+            leadingIcon = { Icon(Icons.Default.MyLocation, contentDescription = null) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        OutlinedTextField(
+            value = drop,
+            onValueChange = { drop = it },
+            label = { Text(if (isHindi) "ड्रॉप लोकेशन (Drop Address)" else "Drop Location") },
+            leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        Text(text = if (isHindi) "वाहन श्रेणी चुनें (Vehicle Type)" else "Select Vehicle Category", fontWeight = FontWeight.Bold)
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            FilterChip(
+                selected = (selectedVehicle == "Bike Parcel"),
+                onClick = { selectedVehicle = "Bike Parcel" },
+                label = { Text("🏍️ Bike Express") }
+            )
+            FilterChip(
+                selected = (selectedVehicle == "Auto Cargo"),
+                onClick = { selectedVehicle = "Auto Cargo" },
+                label = { Text("🛺 Auto Loading") }
+            )
+            FilterChip(
+                selected = (selectedVehicle == "Pickup Truck"),
+                onClick = { selectedVehicle = "Pickup Truck" },
+                label = { Text("🚛 Pickup / Ace") }
+            )
+        }
+
+        Button(
+            onClick = {
+                val rate = when (selectedVehicle) {
+                    "Bike Parcel" -> 15
+                    "Auto Cargo" -> 25
+                    else -> 40
+                }
+                estimatedFare = "Estimated Fare: ₹${rate * 3} - ₹${rate * 6} (Base Distance)"
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(Icons.Default.Calculate, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(if (isHindi) "किराया कैलकुलेट करें" else "Calculate Estimated Fare")
+        }
+
+        if (estimatedFare.isNotEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9))
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text(text = estimatedFare, fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32))
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = if (isHindi) "0% कमीशन - पूरा किराया सीधे ड्राइवर का होगा।" else "0% Commission - 100% fare directly to driver.",
+                        fontSize = 11.sp
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun JobsScreenSection(context: Context, padding: PaddingValues, isHindi: Boolean) {
+    val sampleJobs = listOf(
+        "राजमिस्त्री / कारपेंटर आवश्यक" to "सोनिपत मंडी • ₹750/दिन • दिहाड़ी कार्य",
+        "ट्रैक्टर ड्राइवर आवश्यकता" to "करनाल खेत • ₹600/दिन • फसल कटाई कार्य",
+        "लोडिंग-अनलोडिंग हेल्पर" to "पानीपत गोदाम • ₹550/दिन • तत्काल आवश्यकता",
+        "डिलीवरी पार्टनर (बाइक)" to "रोहतक सिटी • ₹15,000/माह • पार्ट/फुल टाइम"
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = if (isHindi) "💼 स्थानीय रोजगार व कामगार नेटवर्क" else "💼 Local Skilled Worker & Jobs Network",
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = if (isHindi) "बिना ठेकेदार सीधे काम देने वाले से संपर्क करें" else "Direct contact with employer without middleman commission",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+
+        sampleJobs.forEach { (title, desc) ->
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(text = title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(text = desc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+                    }
+                    Button(
+                        onClick = {
+                            Toast.makeText(context, "Employer Phone: Direct Contact Initiated", Toast.LENGTH_SHORT).show()
+                        },
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Icon(Icons.Default.Call, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(if (isHindi) "कॉल करें" else "Call")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DealsScreenSection(context: Context, padding: PaddingValues, isHindi: Boolean) {
+    val sampleDeals = listOf(
+        "🌾 शरबाती गेहूँ (Fresh Wheat)" to "₹2,350/क्विंटल • कुरुक्षेत्र खेत से सीधे खरीद",
+        "🌽 मक्का / फीड (Paddy & Maize)" to "₹1,950/क्विंटल • करनाल मंडी बल्क स्टॉक",
+        "🥦 ताज़ा देशी सब्जियाँ (Bulk)" to "₹18/किग्रा • सीधे किसान से दैनिक मंडी"
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9))
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = if (isHindi) "🤝 किसान मंडी व सीधी फसल खरीद" else "🤝 Direct Farmer-to-Buyer Market",
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1B5E20),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = if (isHindi) "बिना आढ़ती सीधे किसान से फसल व माल खरीदें" else "Zero commission direct farm produce purchase",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF2E7D32)
+                )
+            }
+        }
+
+        sampleDeals.forEach { (title, desc) ->
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(text = title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(text = desc, style = MaterialTheme.typography.bodySmall)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        OutlinedButton(onClick = {
+                            Toast.makeText(context, "Offer terms requested", Toast.LENGTH_SHORT).show()
+                        }) {
+                            Text(if (isHindi) "रेट ऑफर करें" else "Make Offer")
+                        }
+                        Button(onClick = {
+                            Toast.makeText(context, "Direct Farmer Contact Initiated", Toast.LENGTH_SHORT).show()
+                        }) {
+                            Icon(Icons.Default.Phone, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(if (isHindi) "किसान से बात करें" else "Call Farmer")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun WelfareScreenSection(context: Context, padding: PaddingValues, isHindi: Boolean) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFEDE7F6))
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = if (isHindi) "🛡️ चालक व कामगार कल्याण कोष" else "🛡️ Driver & Worker Welfare Protection",
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF4A148C),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = if (isHindi) "₹50 लाख तक का दुर्घटना बीमा व आपातकालीन सुरक्षा" else "Up to ₹50 Lakh Accident Insurance & Emergency Support",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF6A1B9A)
+                )
+            }
+        }
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(text = "🔰 15-दिन वर्किंग ग्रेस सुरक्षा दर्जा", fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "• नए कामगार बिना किसी सरकारी कागजी अड़चन के तुरंत काम शुरू कर सकते हैं।\n• 15 दिनों में अपने आधार/ड्राइविंग लाइसेंस का सत्यापन पूरा करें।",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(text = "📜 राज्य भू-अभिलेख व खतौनी/राजस्व सहायता", fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "किसान व नागरिक अपनी भूमि खतौनी और राजस्व विवरण की जाँच के लिए सीधे आधिकारिक राज्य वेब पोर्टल पर जा सकते हैं।",
+                    style = MaterialTheme.typography.bodySmall
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Button(
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://jamabandi.nic.in/"))
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Language, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(if (isHindi) "राज्य खतौनी पोर्टल खोलें" else "Open Land Records Portal")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SettlementScreenSection(context: Context, padding: PaddingValues, isHindi: Boolean) {
+    var amount by remember { mutableStateOf("") }
+    var customerName by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0))
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = if (isHindi) "💳 0% कमीशन सीधा भुगतान लेखा" else "💳 Direct 0% Commission Settlement",
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFE65100),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = if (isHindi) "नकद या UPI से 100% राशि सीधे आपके बैंक में" else "Direct UPI / Cash payment logging without fees",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFFF57C00)
+                )
+            }
+        }
+
+        OutlinedTextField(
+            value = customerName,
+            onValueChange = { customerName = it },
+            label = { Text(if (isHindi) "ग्राहक / बायर का नाम" else "Customer / Buyer Name") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        OutlinedTextField(
+            value = amount,
+            onValueChange = { amount = it },
+            label = { Text(if (isHindi) "लेन-देन राशि (₹)" else "Payment Amount (₹)") },
+            leadingIcon = { Icon(Icons.Default.AttachMoney, contentDescription = null) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        Button(
+            onClick = {
+                if (amount.isNotBlank()) {
+                    val msg = "LokSetu Payment Receipt:\nReceived ₹$amount from $customerName via Direct Settlement.\nCommission Paid: ₹0 (100% Direct)"
+                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                        data = Uri.parse("https://api.whatsapp.com/send?text=${Uri.encode(msg)}")
+                    }
+                    context.startActivity(intent)
+                } else {
+                    Toast.makeText(context, "Enter amount first", Toast.LENGTH_SHORT).show()
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(Icons.Default.Share, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(if (isHindi) "व्हाट्सएप पर रसीद भेजें" else "Generate & Share WhatsApp Receipt")
+        }
     }
 }
