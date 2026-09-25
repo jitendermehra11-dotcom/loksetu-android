@@ -77,7 +77,7 @@ googleServices { missingGoogleServicesStrategy = MissingGoogleServicesStrategy.W
 // This makes it easy to add them back in the future if needed.
 dependencies {
   implementation(platform("com.google.firebase:firebase-bom:33.10.0"))
-  implementation("com.google.firebase:firebase-auth-ktx")
+  implementation("com.google.firebase:firebase-auth")
   implementation(platform(libs.androidx.compose.bom))
   implementation(platform(libs.firebase.bom))
   implementation("androidx.appcompat:appcompat:1.6.1")
