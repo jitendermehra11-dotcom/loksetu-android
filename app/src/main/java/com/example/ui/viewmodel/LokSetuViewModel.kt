@@ -4,8 +4,6 @@ import android.app.Application
 import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import com.example.data.local.LokSetuDatabase
 import com.example.data.manager.AdWelfareFundManager
 import com.example.data.manager.ChainedDeliveryRun
@@ -78,7 +76,6 @@ enum class AppLanguage(val code: String, val displayName: String, val nativeName
 class LokSetuViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: LokSetuRepository
-    private val firestore: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
 
     // Multi-Language State
     private val _currentLanguage = MutableStateFlow(AppLanguage.HINDI)
@@ -124,10 +121,7 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
     val ondcStatusMessage: StateFlow<String?> = ondcConnector.networkStatusMessage
     val isOndcSyncing: StateFlow<Boolean> = ondcConnector.isSyncing
 
-    // Automated Daily Fuel Price Sync Flow
     val fuelSyncStatus: StateFlow<FuelSyncStatus> = fuelSyncManager.syncStatus
-
-    // OSM Commercial Places Flows
     val osmCommercialPlaces: StateFlow<List<OsmCommercialPlace>> = osmPlacesManager.commercialPlaces
     val isOsmLoading: StateFlow<Boolean> = osmPlacesManager.isLoading
 
@@ -143,17 +137,14 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
     private val _isMerchantOnboardingOpen = MutableStateFlow(false)
     val isMerchantOnboardingOpen: StateFlow<Boolean> = _isMerchantOnboardingOpen.asStateFlow()
 
-    // Store Delivery & Escrow Flows
     val parcelOrders: StateFlow<List<ParcelDeliveryOrder>> = parcelManager.orders
     val totalDeliveryEscrowSecured: StateFlow<Double> = parcelManager.totalEscrowSecured
     val totalRiderPayoutsSettled: StateFlow<Double> = parcelManager.totalRiderPayoutsSettled
     val totalMerchantPayoutsSettled: StateFlow<Double> = parcelManager.totalMerchantPayoutsSettled
 
-    // Fuel Index Flows
     val fuelIndexState: StateFlow<FuelIndexState> = paymentManager.fuelIndexState
     val fuelPrices: StateFlow<Map<FuelType, Double>> = paymentManager.fuelPrices
 
-    // Smart Return Routing Flows
     val activeRider: StateFlow<RiderProfile> = dispatchManager.activeRider
     val returnMatches: StateFlow<List<SmartReturnOrderMatch>> = dispatchManager.returnMatches
     val chainedRuns: StateFlow<List<ChainedDeliveryRun>> = dispatchManager.chainedRuns
@@ -169,11 +160,9 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
     private val _otpVerificationMessage = MutableStateFlow<String?>(null)
     val otpVerificationMessage: StateFlow<String?> = _otpVerificationMessage.asStateFlow()
 
-    // Section State
     private val _currentSection = MutableStateFlow(AppSection.PROVIDERS)
     val currentSection: StateFlow<AppSection> = _currentSection.asStateFlow()
 
-    // User Location State
     private val _userLocation = MutableStateFlow(
         UserLocation(
             latitude = 28.6139,
@@ -188,7 +177,6 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
     private val _isDetectingLocation = MutableStateFlow(false)
     val isDetectingLocation: StateFlow<Boolean> = _isDetectingLocation.asStateFlow()
 
-    // Filter States
     private val _selectedCategory = MutableStateFlow<String?>(null)
     val selectedCategory: StateFlow<String?> = _selectedCategory.asStateFlow()
 
@@ -207,7 +195,6 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
     private val _radiusFilterKm = MutableStateFlow<Double?>(null)
     val radiusFilterKm: StateFlow<Double?> = _radiusFilterKm.asStateFlow()
 
-    // Dialog & Sheet States
     private val _selectedProviderForDetail = MutableStateFlow<ProviderEntity?>(null)
     val selectedProviderForDetail: StateFlow<ProviderEntity?> = _selectedProviderForDetail.asStateFlow()
 
@@ -280,49 +267,6 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
                 _userLocation.value.longitude
             )
             dispatchManager.findSmartReturnMatches(parcelManager.orders.value)
-            
-            // 🔥 Sync with Live Firebase Firestore Database
-            setupFirestoreRealtimeSync()
-        }
-    }
-
-    // --- 🔥 Firebase Firestore Real-Time Listener ---
-    private fun setupFirestoreRealtimeSync() {
-        try {
-            firestore.collection("providers")
-                .addSnapshotListener { snapshot, e ->
-                    if (e != null || snapshot == null) return@addSnapshotListener
-                    val cloudProviders = snapshot.documents.mapNotNull { doc ->
-                        try {
-                            ProviderEntity(
-                                id = doc.getLong("id") ?: System.currentTimeMillis(),
-                                name = doc.getString("name") ?: "",
-                                category = doc.getString("category") ?: ProviderCategory.SKILLED_WORKER.name,
-                                subCategory = doc.getString("subCategory") ?: "",
-                                phone = doc.getString("phone") ?: "",
-                                whatsAppNumber = doc.getString("whatsAppNumber") ?: "",
-                                locationName = doc.getString("locationName") ?: "",
-                                latitude = doc.getDouble("latitude") ?: 28.6139,
-                                longitude = doc.getDouble("longitude") ?: 77.2090,
-                                speciality = doc.getString("speciality") ?: "",
-                                rating = doc.getDouble("rating") ?: 4.8,
-                                totalReviews = (doc.getLong("totalReviews") ?: 12).toInt(),
-                                isVerified = doc.getBoolean("isVerified") ?: true,
-                                isAvailableNow = doc.getBoolean("isAvailableNow") ?: true,
-                                dailyWageDisplay = doc.getString("dailyWageDisplay") ?: "₹500/day"
-                            )
-                        } catch (ex: Exception) {
-                            null
-                        }
-                    }
-                    if (cloudProviders.isNotEmpty()) {
-                        viewModelScope.launch {
-                            cloudProviders.forEach { repository.addProvider(it) }
-                        }
-                    }
-                }
-        } catch (e: Exception) {
-            // Firestore fallback to local SQLite DB
         }
     }
 
@@ -395,7 +339,7 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
                 val loc = LocationHelper.fetchCurrentGpsLocation(context)
                 if (loc != null) {
                     _userLocation.value = loc
-                    _userNoticeEvent.emit("GPS Location updated: ${loc.address} (±${loc.accuracyMeters.toInt()}m)")
+                    _userNoticeEvent.emit("GPS Location updated: ${loc.address}")
                 } else {
                     _userNoticeEvent.emit("Could not fetch GPS. Please ensure Location is enabled.")
                 }
@@ -537,36 +481,11 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    // 🔥 Save New Provider to SQLite & Live Firebase Firestore
     fun addNewProvider(provider: ProviderEntity) {
         viewModelScope.launch {
             repository.addProvider(provider)
             _isAddProviderOpen.value = false
             _userNoticeEvent.emit("Successfully registered ${provider.name} on LokSetu!")
-
-            // Push to Firebase Firestore Cloud
-            try {
-                val dataMap = hashMapOf(
-                    "id" to provider.id,
-                    "name" to provider.name,
-                    "category" to provider.category,
-                    "subCategory" to provider.subCategory,
-                    "phone" to provider.phone,
-                    "whatsAppNumber" to provider.whatsAppNumber,
-                    "locationName" to provider.locationName,
-                    "latitude" to provider.latitude,
-                    "longitude" to provider.longitude,
-                    "speciality" to provider.speciality,
-                    "rating" to provider.rating,
-                    "totalReviews" to provider.totalReviews,
-                    "isVerified" to provider.isVerified,
-                    "isAvailableNow" to provider.isAvailableNow,
-                    "dailyWageDisplay" to provider.dailyWageDisplay
-                )
-                firestore.collection("providers").document(provider.id.toString()).set(dataMap)
-            } catch (e: Exception) {
-                // Ignore cloud sync error if offline
-            }
         }
     }
 
@@ -577,7 +496,6 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    // Payment Settlement
     fun openSettlementForProvider(provider: ProviderEntity) {
         _selectedProviderForSettlement.value = provider
     }
@@ -611,12 +529,11 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
             grossAmount = grossAmount
         )
         viewModelScope.launch {
-            _userNoticeEvent.emit("Settlement ₹${record.breakdown.netPayoutAmount} disbursed to ${record.providerUpiId}")
+            _userNoticeEvent.emit("Settlement ₹${record.breakdown.netPayoutAmount} disbursed")
         }
         return record
     }
 
-    // Emergency SOS
     fun openSosDialog() {
         _isSosDialogOpen.value = true
     }
@@ -652,7 +569,6 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
         )
     }
 
-    // Welfare Fund
     fun contributeToWelfareFund(
         sponsorName: String,
         campaignTitle: String,
@@ -666,11 +582,10 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
             amount = amount
         )
         viewModelScope.launch {
-            _userNoticeEvent.emit("Sponsor Ad revenue +₹$amount credited to Drivers' Accidental Insurance Fund!")
+            _userNoticeEvent.emit("Sponsor Ad revenue +₹$amount credited to Welfare Fund!")
         }
     }
 
-    // Farmer Deals
     fun openCreateDeal() {
         _isCreateDealOpen.value = true
     }
@@ -703,7 +618,7 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
         )
         _isCreateDealOpen.value = false
         viewModelScope.launch {
-            _userNoticeEvent.emit("Deal #${deal.id} created! 15% Escrow Advance locked.")
+            _userNoticeEvent.emit("Deal #${deal.id} created successfully.")
         }
     }
 
@@ -711,7 +626,7 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
         val updated = dealManager.cancelDealByBuyer(dealId, cancellationReason)
         viewModelScope.launch {
             if (updated != null) {
-                _userNoticeEvent.emit("Buyer Cancelled: 15% Escrow transferred to farmer!")
+                _userNoticeEvent.emit("Deal cancelled by buyer.")
             }
         }
     }
@@ -720,7 +635,7 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
         val updated = dealManager.cancelDealByFarmer(dealId, defaultReason)
         viewModelScope.launch {
             if (updated != null) {
-                _userNoticeEvent.emit("Farmer Defaulted: 15% Advance refunded + penalty.")
+                _userNoticeEvent.emit("Deal cancelled by farmer.")
             }
         }
     }
@@ -734,7 +649,6 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    // Jobs
     fun selectSection(section: AppSection) {
         _currentSection.value = section
     }
@@ -799,7 +713,7 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
     fun applyJobViaPhone(context: Context, job: JobListing) {
         LocationHelper.makeDirectPhoneCall(context, job.contactPhone)
         viewModelScope.launch {
-            _userNoticeEvent.emit("Calling ${job.employerName} for ${job.title}...")
+            _userNoticeEvent.emit("Calling ${job.employerName}...")
         }
     }
 
@@ -807,11 +721,10 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
         val appMsg = "Namaste, I found your verified opening for '${job.title}' on LokSetu."
         LocationHelper.openWhatsAppMessage(context, job.whatsAppNumber, appMsg)
         viewModelScope.launch {
-            _userNoticeEvent.emit("Opening WhatsApp to apply for ${job.title}...")
+            _userNoticeEvent.emit("Opening WhatsApp...")
         }
     }
 
-    // Parcel Delivery
     fun openCreateParcelOrder() {
         _isCreateParcelOrderOpen.value = true
     }
@@ -863,7 +776,7 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
         _isCreateParcelOrderOpen.value = false
         dispatchManager.findSmartReturnMatches(parcelOrders.value)
         viewModelScope.launch {
-            _userNoticeEvent.emit("🛡️ Order ${order.id} locked in 100% Escrow.")
+            _userNoticeEvent.emit("🛡️ Order ${order.id} locked in Escrow.")
         }
     }
 
@@ -902,7 +815,7 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
         _isCreateParcelOrderOpen.value = false
         dispatchManager.findSmartReturnMatches(parcelOrders.value)
         viewModelScope.launch {
-            _userNoticeEvent.emit("💵 COD Order ${order.id} confirmed upfront.")
+            _userNoticeEvent.emit("💵 COD Order ${order.id} confirmed.")
         }
     }
 
@@ -916,7 +829,7 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
         val ok = parcelManager.assignRider(orderId, riderName, riderPhone, riderUpiId, vehicleType)
         if (ok) {
             viewModelScope.launch {
-                _userNoticeEvent.emit("🏍️ Rider $riderName assigned to Order $orderId")
+                _userNoticeEvent.emit("🏍️ Rider assigned to Order $orderId")
             }
         }
     }
@@ -935,7 +848,7 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
             is ParcelDeliveryManager.OtpVerificationResult.Success -> {
                 _otpVerificationMessage.value = "SUCCESS: Instant UPI Split Settled!"
                 viewModelScope.launch {
-                    _userNoticeEvent.emit("✅ 4-Digit OTP Verified! Instant UPI Payout Settled.")
+                    _userNoticeEvent.emit("✅ 4-Digit OTP Verified!")
                 }
                 return true
             }
@@ -947,12 +860,7 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun confirmCodUpfront(orderId: String) {
-        val ok = parcelManager.confirmCodUpfront(orderId)
-        if (ok) {
-            viewModelScope.launch {
-                _userNoticeEvent.emit("💵 COD Order confirmed upfront!")
-            }
-        }
+        parcelManager.confirmCodUpfront(orderId)
     }
 
     fun selectFuelType(fuelType: FuelType) {
@@ -962,16 +870,10 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
 
     fun updateFuelPrice(fuelType: FuelType, newPrice: Double) {
         paymentManager.updateFuelPrice(fuelType, newPrice)
-        viewModelScope.launch {
-            _userNoticeEvent.emit("⛽ ${fuelType.displayName} price updated to ₹$newPrice!")
-        }
     }
 
     fun resetFuelPrices() {
         paymentManager.resetToDefaultFuelPrices()
-        viewModelScope.launch {
-            _userNoticeEvent.emit("🔄 Fuel prices reset to benchmark rates.")
-        }
     }
 
     fun refreshSmartReturnMatches() {
@@ -981,36 +883,21 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
     fun updateRiderLocation(lat: Double, lng: Double, locationName: String) {
         dispatchManager.updateRiderLocation(lat, lng, locationName)
         dispatchManager.findSmartReturnMatches(parcelOrders.value)
-        viewModelScope.launch {
-            _userNoticeEvent.emit("📍 Rider location updated to $locationName.")
-        }
     }
 
     fun updateRiderHomeHub(lat: Double, lng: Double, hubName: String) {
         dispatchManager.updateRiderHomeHub(lat, lng, hubName)
         dispatchManager.findSmartReturnMatches(parcelOrders.value)
-        viewModelScope.launch {
-            _userNoticeEvent.emit("🏠 Rider home hub set to $hubName.")
-        }
     }
 
     fun createMultiStopChain(primaryOrder: ParcelDeliveryOrder, returnOrder: ParcelDeliveryOrder) {
-        val run = dispatchManager.createMultiStopChain(primaryOrder, returnOrder)
-        viewModelScope.launch {
-            _userNoticeEvent.emit("🔗 Multi-Stop Chained Run ${run.chainId} Created!")
-        }
+        dispatchManager.createMultiStopChain(primaryOrder, returnOrder)
     }
 
-    fun advanceChainStop(chainId: String, stopNumber: Int) {
-        val ok = dispatchManager.advanceChainStop(chainId, stopNumber)
-        if (ok) {
-            viewModelScope.launch {
-                _userNoticeEvent.emit("✅ Stop $stopNumber confirmed!")
-            }
-        }
+    fun advanceChainStop(chainId: String, stopNumber: Int): Boolean {
+        return dispatchManager.advanceChainStop(chainId, stopNumber)
     }
 
-    // ONDC & External APIs
     fun openOndcExplorer() {
         _isOndcExplorerOpen.value = true
     }
@@ -1066,26 +953,13 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
                 vehicleType = activeRiderProfile.vehicleType
             )
 
-            dispatchManager.findSmartReturnMatches(parcelManager.orders.value)
-
-            viewModelScope.launch {
-                _userNoticeEvent.emit("📦 ONDC Order ${broadcastOrder.id} Accepted!")
-            }
+            dispatchManager.findSmartReturnMatches(parcelOrders.value)
         }
     }
 
     fun syncDailyFuelRates(forceRefresh: Boolean = true) {
         viewModelScope.launch {
-            val result = fuelSyncManager.syncDailyFuelRates(forceRefresh = forceRefresh)
-            if (result.isSuccess) {
-                val rates = result.getOrNull()
-                val petrol = rates?.get(FuelType.PETROL) ?: FuelType.PETROL.defaultCurrentPrice
-                val diesel = rates?.get(FuelType.DIESEL) ?: FuelType.DIESEL.defaultCurrentPrice
-                val cng = rates?.get(FuelType.CNG) ?: FuelType.CNG.defaultCurrentPrice
-                _userNoticeEvent.emit("⛽ Daily fuel index synced! Petrol ₹$petrol, Diesel ₹$diesel, CNG ₹$cng.")
-            } else {
-                _userNoticeEvent.emit("⚠️ Fuel sync: Using local benchmark rates.")
-            }
+            fuelSyncManager.syncDailyFuelRates(forceRefresh = forceRefresh)
         }
     }
 
@@ -1120,11 +994,7 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
             address = place.name
         )
         dispatchManager.updateRiderHomeHub(place.latitude, place.longitude, place.name)
-        dispatchManager.findSmartReturnMatches(parcelManager.orders.value)
-
-        viewModelScope.launch {
-            _userNoticeEvent.emit("📍 Selected '${place.name}' as primary trade hub.")
-        }
+        dispatchManager.findSmartReturnMatches(parcelOrders.value)
     }
 
     fun openMerchantOnboarding() {
@@ -1179,10 +1049,6 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
             status = OndcBroadcastOrderStatus.BROADCASTING
         )
         ondcConnector.broadcastNewOrder(order)
-
-        viewModelScope.launch {
-            _userNoticeEvent.emit("🎉 Store '${newMerchant.name}' Onboarded to ONDC!")
-        }
     }
 
     fun openServiceEscrow(provider: ProviderEntity? = null) {
@@ -1206,7 +1072,7 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
         serviceFee: Double,
         travelAllowance: Double
     ) {
-        val booking = serviceEscrowManager.lockUpfrontEscrowBooking(
+        serviceEscrowManager.lockUpfrontEscrowBooking(
             providerId = providerId,
             providerName = providerName,
             providerPhone = providerPhone,
@@ -1225,17 +1091,10 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
             startLat = _userLocation.value.latitude,
             startLng = _userLocation.value.longitude
         )
-        viewModelScope.launch {
-            _userNoticeEvent.emit("🔒 100% Escrow of ₹${booking.totalLockedAmount.toInt()} LOCKED.")
-        }
     }
 
     fun verifyEscrowOtpAndRelease(bookingId: String, enteredOtp: String): Pair<Boolean, String> {
-        val result = serviceEscrowManager.verifyOtpAndDisburse(bookingId, enteredOtp)
-        viewModelScope.launch {
-            _userNoticeEvent.emit(result.second)
-        }
-        return result
+        return serviceEscrowManager.verifyOtpAndDisburse(bookingId, enteredOtp)
     }
 
     fun openHomeVisitSafety() {
@@ -1247,17 +1106,11 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun triggerDiscretePanicAlert() {
-        val alertMsg = homeVisitSafetyManager.triggerDiscretePanicAlert("1-Tap Discreet Panic Alert Pressed")
-        viewModelScope.launch {
-            _userNoticeEvent.emit("🚨 Discreet Panic Alert Dispatched!")
-        }
+        homeVisitSafetyManager.triggerDiscretePanicAlert("1-Tap Discreet Panic Alert Pressed")
     }
 
     fun resolveDiscretePanicAlert() {
         homeVisitSafetyManager.resolvePanicAlert()
-        viewModelScope.launch {
-            _userNoticeEvent.emit("✅ Safety Alert Resolved.")
-        }
     }
 
     fun openCustomerRating() {
@@ -1277,7 +1130,7 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
         flagType: DisputeFlagType,
         feedbackNote: String
     ) {
-        val profile = customerRatingManager.submitProviderRatingForCustomer(
+        customerRatingManager.submitProviderRatingForCustomer(
             customerPhone = customerPhone,
             customerName = customerName,
             providerName = providerName,
@@ -1286,13 +1139,6 @@ class LokSetuViewModel(application: Application) : AndroidViewModel(application)
             flagType = flagType,
             feedbackNote = feedbackNote
         )
-        viewModelScope.launch {
-            if (profile.isPlatformBlocked) {
-                _userNoticeEvent.emit("⚠️ Customer ${profile.customerName} AUTO-BLOCKED across platform!")
-            } else {
-                _userNoticeEvent.emit("✅ Verified Review recorded for ${profile.customerName}.")
-            }
-        }
     }
 }
 
